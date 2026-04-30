@@ -1,68 +1,91 @@
 # Forge — Python Backend
 
-FastAPI + Groq streaming backend for the Forge AI studio.
-**Primary model:** `llama-3.1-8b-instant` · **Fallback:** `llama-3.3-70b-versatile`
+FastAPI backend for Forge AI — wires **Prompt Forge** and **SQL Sorcerer** to Groq's blazing-fast LLM API.
 
-## Features
-- **Prompt Forge** — rewrites prompts + quality scores (clarity / specificity / tone / overall)
-- **Word-level diff** — side-by-side original vs improved with highlighted changes
-- **Iterate** — refine the output with follow-up instructions
-- **Run it** — execute the improved prompt and stream the real model response
-- **A/B Compare** — scores original vs forged side-by-side, highlights the winner
-- **Session History** — all runs saved in-session, click any to restore and re-run
-- **SQL Sorcerer** — NL → SQL with dialect support + iterate
-- **SSE streaming** — tokens stream in real time from Groq
+## Stack
+- **FastAPI** — async web framework
+- **Groq** — LLM inference (`llama-3.3-70b-versatile`)
+- **httpx** — async HTTP streaming
+- **uvicorn** — ASGI server
 
----
+## Quick Start (local)
 
-## Local Development
-
+### 1. Install dependencies
 ```bash
-# 1. Install
 pip install -r requirements.txt
-
-# 2. Set API key (get free key at console.groq.com)
-cp .env.example .env
-# Edit .env → GROQ_API_KEY=gsk_...
-
-# 3. Run
-python run.py
-# → http://localhost:8000
 ```
 
----
-
-## Deployment (pick one)
-
-### Railway (easiest — 2 minutes)
-1. Push this folder to a GitHub repo
-2. Go to railway.app → New Project → Deploy from GitHub
-3. Select your repo
-4. Add env variable: GROQ_API_KEY=gsk_...
-5. Done — Railway auto-detects the Dockerfile
-
-### Render
-1. Push to GitHub
-2. Go to render.com → New → Web Service → connect repo
-3. Render reads render.yaml automatically
-4. Set GROQ_API_KEY in the Environment section
-5. Deploy
-
-### Fly.io
+### 2. Set your API key
 ```bash
-fly launch
-fly secrets set GROQ_API_KEY=gsk_...
-fly deploy
+cp .env.example .env
+# Edit .env — set GROQ_API_KEY=gsk_...
+# Get a free key at https://console.groq.com
 ```
 
----
+### 3. Run
+```bash
+python run.py
+# OR
+uvicorn main:app --reload --port 8000
+```
 
-## API Reference
+Open http://localhost:8000
+
+## Deploy to Railway
+
+1. Push this folder to a GitHub repo
+2. Create a new Railway project → **Deploy from GitHub repo**
+3. Railway auto-detects the `Dockerfile`
+4. Add environment variable: `GROQ_API_KEY=gsk_...`
+5. Deploy — done ✓
+
+## Project Structure
+```
+forge_backend/
+├── main.py            ← FastAPI app + all API routes
+├── run.py             ← Local dev launcher (loads .env, hot reload)
+├── requirements.txt
+├── Dockerfile         ← Production container for Railway
+├── railway.toml       ← Railway build config
+├── .env.example       ← Copy to .env and add your key
+└── static/
+    └── index.html     ← Forge UI
+```
+
+## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | /api/forge-prompt | Stream improved prompt + scores |
-| POST | /api/run-prompt | Stream actual model response to a prompt |
-| POST | /api/score-prompt | Score a prompt (returns JSON) |
-| POST | /api/generate-sql | Stream SQL from natural language |
-| GET  | /api/health | Health check |
+| GET  | `/` | Forge UI |
+| POST | `/api/forge-prompt` | Stream prompt improvement + quality scores |
+| POST | `/api/generate-sql` | Stream SQL from natural language |
+| GET  | `/api/health` | Health check |
+
+### POST /api/forge-prompt
+```json
+{ "prompt": "Explain quantum computing simply." }
+```
+SSE stream:
+```
+data: {"type": "token", "text": "You are an expert..."}
+data: {"type": "scores", "clarity": 88, "specificity": 84, "tone": 91, "overall": 90}
+data: {"type": "done"}
+```
+
+### POST /api/generate-sql
+```json
+{ "description": "Top 10 customers by spend last 30 days", "dialect": "PostgreSQL" }
+```
+SSE stream:
+```
+data: {"type": "token", "text": "WITH recent_orders AS ("}
+data: {"type": "done"}
+```
+
+## Swap the Model
+Edit `MODEL` in `main.py`:
+```python
+MODEL = "llama-3.3-70b-versatile"   # default — fast + smart
+# MODEL = "llama-3.1-8b-instant"    # faster, lighter
+# MODEL = "mixtral-8x7b-32768"      # long context
+```

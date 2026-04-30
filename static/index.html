@@ -561,52 +561,6 @@
   .stage .check{position:absolute; top:6px; right:8px; font-size:11px; color:var(--accent); opacity:0; transition:opacity .3s}
   .stage.done .check{opacity:1}
 
-
-  /* ── DIFF VIEW ── */
-  .diff-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
-  @media(max-width:700px){.diff-wrap{grid-template-columns:1fr}}
-  .diff-pane{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:13.5px;line-height:1.75;color:var(--text);white-space:pre-wrap;position:relative}
-  .diff-pane .diff-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:block}
-  .diff-add{background:rgba(0,255,157,.13);border-radius:3px;padding:0 2px}
-  .diff-del{background:rgba(255,93,122,.13);border-radius:3px;padding:0 2px;text-decoration:line-through;color:var(--text3)}
-
-  /* ── HISTORY ── */
-  .history-wrap{margin-top:32px;max-width:980px;margin-left:auto;margin-right:auto}
-  .history-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--text2);letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
-  .history-list{display:flex;flex-direction:column;gap:8px}
-  .history-item{
-    background:var(--surface);border:1px solid var(--border);border-radius:12px;
-    padding:12px 16px;cursor:pointer;transition:all .2s;
-    display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
-  }
-  .history-item:hover{border-color:var(--border-strong);transform:translateX(2px)}
-  .history-item .hi-original{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .history-item .hi-meta{display:flex;gap:8px;align-items:center;flex-shrink:0}
-  .history-item .hi-score{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);background:var(--accent-soft);padding:2px 7px;border-radius:6px;border:1px solid var(--border-strong)}
-  .history-item .hi-tab{font-size:10px;letter-spacing:1px;color:var(--text3);text-transform:uppercase}
-  .history-item .hi-time{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace}
-
-  /* ── ITERATE PANEL ── */
-  .iterate-wrap{margin-top:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;display:flex;gap:10px;align-items:center}
-  .iterate-wrap input{flex:1;background:transparent;border:none;outline:none;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);caret-color:var(--accent)}
-  .iterate-wrap input::placeholder{color:var(--text3)}
-  .iterate-btn{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#001a10;font-weight:700;padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap;transition:transform .15s,box-shadow .2s}
-  .iterate-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,255,157,.3)}
-
-  /* ── RUN OUTPUT ── */
-  .run-output{margin-top:14px;background:#080a14;border:1px solid var(--border);border-radius:12px;overflow:hidden}
-  .run-output .run-head{padding:8px 14px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.02)}
-  .run-output pre{margin:0;padding:16px 20px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#cfe1ff;line-height:1.7;white-space:pre-wrap;max-height:320px;overflow-y:auto}
-
-  /* ── AB COMPARE ── */
-  .ab-wrap{display:flex;flex-direction:column;gap:10px;margin-top:14px}
-  .ab-version{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
-  .ab-version .ab-label{font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;font-family:'JetBrains Mono',monospace;display:flex;justify-content:space-between}
-  .ab-version .ab-text{font-size:13.5px;color:var(--text);line-height:1.75;white-space:pre-wrap}
-  .ab-version .ab-score{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
-  .ab-winner{border-color:var(--border-strong)!important;background:var(--accent-soft)!important}
-  .ab-winner .ab-label{color:var(--accent)!important}
-
   /* Responsive */
   @media (max-width:780px){
     main{padding:24px 16px 60px}
@@ -759,13 +713,6 @@
     </div>
 
     <div id="results"></div>
-    <div class="history-wrap" id="history-wrap" style="display:none">
-      <div class="history-title">
-        <span>⟳ Session History</span>
-        <button class="ghost-btn" onclick="clearHistory()">Clear</button>
-      </div>
-      <div class="history-list" id="history-list"></div>
-    </div>
   </main>
 </div>
 
@@ -1100,118 +1047,9 @@ async function runWorking(token){
   });
 }
 
-/* ── SESSION HISTORY ── */
-const sessionHistory = [];
-
-function saveToHistory(entry){
-  sessionHistory.unshift(entry); // newest first
-  renderHistory();
-}
-
-function renderHistory(){
-  const wrap = document.getElementById('history-wrap');
-  const list = document.getElementById('history-list');
-  if(!sessionHistory.length){ wrap.style.display='none'; return; }
-  wrap.style.display='block';
-  list.innerHTML = sessionHistory.map((e,i)=>`
-    <div class="history-item" onclick="restoreHistory(${i})">
-      <div>
-        <div class="hi-original">${escHtml(e.original.slice(0,120))}${e.original.length>120?'…':''}</div>
-        <div class="hi-time">${e.time}</div>
-      </div>
-      <div class="hi-meta">
-        <span class="hi-tab">${e.tab}</span>
-        ${e.score ? `<span class="hi-score">${e.score}%</span>` : ''}
-      </div>
-    </div>`).join('');
-}
-
-function restoreHistory(i){
-  const e = sessionHistory[i];
-  if(e.tab === 'prompt'){
-    if(activeTab!==0) switchTab(0);
-    document.getElementById('prompt-input').value = e.original;
-    updateCount('prompt');
-    // re-run
-    setTimeout(()=>analyzePrompt(), 100);
-  } else {
-    if(activeTab!==1) switchTab(1);
-    document.getElementById('sql-input').value = e.original;
-    updateCount('sql');
-    setTimeout(()=>analyzeSql(), 100);
-  }
-  toast('History restored');
-}
-
-function clearHistory(){
-  sessionHistory.length = 0;
-  renderHistory();
-  toast('History cleared');
-}
-
-/* ── MARKDOWN RENDERER (bold, italic, bullets) ── */
-function mdToHtml(text){
-  return escHtml(text)
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)$/gm, '• $1')
-    .replace(/
-/g, '<br>');
-}
-
-/* ── WORD-LEVEL DIFF ── */
-function wordDiff(origText, newText){
-  // Strip markdown markers for word comparison
-  const strip = t => t.replace(/\*\*/g,'').replace(/\*/g,'');
-  const origWords = origText.split(/(\s+)/);
-  const newWords  = newText.split(/(\s+)/);
-  const origSet = new Set(origWords.map(strip).filter(w=>w.trim()));
-  const newSet  = new Set(newWords.map(strip).filter(w=>w.trim()));
-  const origOut = origWords.map(w=>{
-    const s = strip(w);
-    if(!s.trim()) return '<br>';
-    return newSet.has(s) ? escHtml(w) : `<span class="diff-del">${escHtml(w)}</span>`;
-  }).join('');
-  const newOut = newWords.map(w=>{
-    const s = strip(w);
-    if(!s.trim()) return '<br>';
-    return origSet.has(s) ? mdToHtml(w) : `<span class="diff-add">${mdToHtml(w)}</span>`;
-  }).join('');
-  return { origOut, newOut };
-}
-
-/* ── STREAM SSE helper ── */
-async function streamSSE(url, body, onEvent){
-  const resp = await fetch(url, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(body)
-  });
-  if(!resp.ok) throw new Error('API error ' + resp.status);
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = '';
-  while(true){
-    const {done, value} = await reader.read();
-    if(done) break;
-    buf += decoder.decode(value, {stream:true});
-    const lines = buf.split('\n');
-    buf = lines.pop();
-    for(const line of lines){
-      if(!line.startsWith('data:')) continue;
-      const raw = line.slice(5).trim();
-      let evt;
-      try { evt = JSON.parse(raw); } catch { continue; }
-      const stop = await onEvent(evt);
-      if(stop) return;
-    }
-  }
-}
-
-/* ---------- PROMPT ANALYSIS ---------- */
-async function analyzePrompt(iterateInstruction=null){
-  const inputEl = document.getElementById('prompt-input');
-  const input = inputEl.value.trim();
+/* ---------- PROMPT ANALYSIS (real API streaming) ---------- */
+async function analyzePrompt(){
+  const input = document.getElementById('prompt-input').value.trim();
   if(!input){ toast('Please enter a prompt first'); return; }
   cancelInFlight();
   const token = ++runToken;
@@ -1222,18 +1060,10 @@ async function analyzePrompt(iterateInstruction=null){
     <div class="result-card">
       <div class="result-head">
         <div class="result-title">Improved Prompt <span class="badge live">STREAMING</span></div>
-        <div style="display:flex;gap:8px">
-          <button class="ghost-btn" id="btn-run-prompt" style="display:none">▶ Run it</button>
-          <button class="ghost-btn" id="btn-ab-prompt" style="display:none">A/B Compare</button>
-          <button class="ghost-btn" id="copy-prompt-btn">Copy</button>
-        </div>
+        <button class="ghost-btn" id="copy-prompt-btn">Copy</button>
       </div>
       <div class="result-body">
         ${workingHTML("Optimizing your prompt")}
-        <div class="diff-wrap" id="diff-wrap" style="display:none;margin-top:18px">
-          <div class="diff-pane"><span class="diff-label">Original</span><div id="diff-orig"></div></div>
-          <div class="diff-pane"><span class="diff-label">Improved</span><div id="diff-new"></div></div>
-        </div>
         <p id="stream-target" style="margin-top:18px;white-space:pre-wrap;line-height:1.7;font-family:inherit;font-size:14px;color:var(--text)"></p>
         <div class="score-row">
           <div class="score"><div class="lbl">Clarity</div><div class="val" id="sc-clarity">—</div><div class="bar"><span id="bar-clarity"></span></div></div>
@@ -1241,21 +1071,17 @@ async function analyzePrompt(iterateInstruction=null){
           <div class="score"><div class="lbl">Tone</div><div class="val cyan" id="sc-tone">—</div><div class="bar"><span id="bar-tone"></span></div></div>
           <div class="score"><div class="lbl">Overall</div><div class="val purple" id="sc-overall">—</div><div class="bar"><span id="bar-overall"></span></div></div>
         </div>
-        <div class="iterate-wrap" style="margin-top:18px">
-          <input id="iterate-input" placeholder="Refine further… e.g. 'make it more concise' or 'add a JSON output format'" />
-          <button class="iterate-btn" id="iterate-btn">↺ Refine</button>
-        </div>
-        <div id="run-output-wrap"></div>
-        <div id="ab-wrap-inner"></div>
       </div>
     </div>`;
 
   logLine('info', `prompt received · ${input.length} chars`);
   logLine('tok', `tokens in: ~${Math.ceil(input.length/4)}`);
 
+  // Remove working indicator after short delay
   await new Promise(r=>setTimeout(r, 600));
   const w = document.querySelector('.working');
   if(w) w.classList.add('done');
+
   if(token !== runToken){ busy=false; return; }
 
   logLine('info','streaming refined prompt…');
@@ -1263,38 +1089,59 @@ async function analyzePrompt(iterateInstruction=null){
   target.innerHTML = '<span class="cursor-blink"></span>';
 
   let improved = '';
-  let lastScores = null;
 
   try {
-    const body = iterateInstruction
-      ? { prompt: input, iterate: iterateInstruction }
-      : { prompt: input };
-
-    await streamSSE('/api/forge-prompt', body, async (evt) => {
-      if(token !== runToken) return true;
-      if(evt.type === 'model'){
-        logLine('info', `model → ${evt.model}`);
-      } else if(evt.type === 'token'){
-        improved += evt.text;
-        target.innerHTML = mdToHtml(improved) + '<span class="cursor-blink"></span>';
-      } else if(evt.type === 'scores'){
-        lastScores = evt;
-        const conf = Math.round((evt.clarity+evt.specificity+evt.tone+evt.overall)/4);
-        animateScore('sc-clarity','bar-clarity', evt.clarity);
-        animateScore('sc-spec','bar-spec', evt.specificity);
-        animateScore('sc-tone','bar-tone', evt.tone);
-        animateScore('sc-overall','bar-overall', evt.overall);
-        document.getElementById('m-conf').textContent = conf+'%';
-        document.getElementById('m-conf-d').textContent = '▲ refined';
-        logLine('info', `scores · clarity:${evt.clarity} spec:${evt.specificity} tone:${evt.tone} overall:${evt.overall}`);
-      } else if(evt.type === 'done'){
-        const cur = target.querySelector('.cursor-blink');
-        if(cur) cur.remove();
-        return true;
-      } else if(evt.type === 'error'){
-        throw new Error(evt.message);
-      }
+    const resp = await fetch('/api/forge-prompt', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ prompt: input })
     });
+
+    if(!resp.ok){ throw new Error('API error ' + resp.status); }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while(true){
+      if(token !== runToken) break;
+      const { done, value } = await reader.read();
+      if(done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data:')) continue;
+        const raw = line.slice(5).trim();
+        let evt;
+        try { evt = JSON.parse(raw); } catch{ continue; }
+
+        if(evt.type === 'token'){
+          improved += evt.text;
+          // remove cursor, append text, re-add cursor
+          target.innerHTML = escHtml(improved) + '<span class="cursor-blink"></span>';
+          target.scrollTop = target.scrollHeight;
+        }
+        else if(evt.type === 'scores'){
+          const conf = Math.round((evt.clarity+evt.specificity+evt.tone+evt.overall)/4);
+          animateScore('sc-clarity','bar-clarity', evt.clarity);
+          animateScore('sc-spec','bar-spec', evt.specificity);
+          animateScore('sc-tone','bar-tone', evt.tone);
+          animateScore('sc-overall','bar-overall', evt.overall);
+          document.getElementById('m-conf').textContent = conf+'%';
+          document.getElementById('m-conf-d').textContent = '▲ refined';
+          logLine('info', `scores · clarity:${evt.clarity} spec:${evt.specificity} tone:${evt.tone} overall:${evt.overall}`);
+        }
+        else if(evt.type === 'done'){
+          const cur = target.querySelector('.cursor-blink');
+          if(cur) cur.remove();
+          break;
+        }
+        else if(evt.type === 'error'){
+          throw new Error(evt.message);
+        }
+      }
+    }
   } catch(err){
     logLine('err', 'API error: ' + err.message);
     target.innerHTML = `<span style="color:var(--danger)">⚠ ${escHtml(err.message)}</span>`;
@@ -1305,254 +1152,28 @@ async function analyzePrompt(iterateInstruction=null){
 
   if(token !== runToken){ busy=false; return; }
 
-  // ── DIFF VIEW ──
-  const {origOut, newOut} = wordDiff(input, improved, true);
-  document.getElementById('diff-orig').innerHTML = origOut;
-  document.getElementById('diff-new').innerHTML = newOut;
-  document.getElementById('diff-wrap').style.display = 'grid';
-  target.style.display = 'none'; // hide plain text, show diff
-
-  // ── WHY panel (dynamic based on diff) ──
   document.getElementById('results').insertAdjacentHTML('beforeend', `
     <div class="result-card">
       <div class="result-head"><div class="result-title">Why these changes</div></div>
       <div class="result-body">
         <div class="info-box">
           <h4>What changed and why</h4>
-          <ul id="why-list"></ul>
+          <ul>
+            <li><strong>Added an expert role</strong> — gives the model a clear perspective so it answers with authority instead of generic information.</li>
+            <li><strong>Set tone and audience</strong> — clear, engaging language tailored to the reader avoids dry or overly technical output.</li>
+            <li><strong>Constrained the format</strong> — capping at ~280 words and asking for vivid analogies keeps the response focused and memorable.</li>
+            <li><strong>Required a takeaway</strong> — ending with one concrete insight ensures the answer is useful, not just informative.</li>
+          </ul>
         </div>
       </div>
     </div>`);
 
-  // Build dynamic why-list from actual diff
-  const whyItems = [];
-  if(improved.match(/you are|as a|act as/i)) whyItems.push('<strong>Expert role added</strong> — anchors the model's perspective and output authority.');
-  if(improved.length > input.length * 1.2) whyItems.push('<strong>Context expanded</strong> — more specific constraints reduce ambiguity in the output.');
-  if(improved.match(/format|structure|bullet|list|json|steps/i)) whyItems.push('<strong>Output format specified</strong> — explicit structure prevents vague or unorganized responses.');
-  if(improved.match(/concise|brief|under \d+|max \d+|\d+ words/i)) whyItems.push('<strong>Length constrained</strong> — capping the output keeps responses focused and scannable.');
-  if(improved.match(/takeaway|conclusion|summarize|end with/i)) whyItems.push('<strong>Takeaway required</strong> — forces a concrete, memorable conclusion.');
-  if(improved.match(/tone|audience|beginner|expert|technical|simple/i)) whyItems.push('<strong>Audience & tone set</strong> — tailoring language to the reader improves engagement.');
-  if(!whyItems.length) whyItems.push('<strong>Prompt refined</strong> — structure and clarity improved for better model alignment.');
-  document.getElementById('why-list').innerHTML = whyItems.map(li=>`<li>${li}</li>`).join('');
-
-  // ── Wire up buttons ──
   const badge = document.querySelector('.result-head .badge');
   if(badge){ badge.classList.remove('live'); badge.textContent = 'FORGED'; }
   document.getElementById('copy-prompt-btn').onclick = ()=>copyText(improved,'Prompt copied');
 
-  // Run it button
-  const runBtn = document.getElementById('btn-run-prompt');
-  runBtn.style.display = '';
-  runBtn.onclick = ()=>runPrompt(improved, token);
-
-  // A/B Compare button
-  const abBtn = document.getElementById('btn-ab-prompt');
-  abBtn.style.display = '';
-  abBtn.onclick = ()=>abCompare(input, improved, lastScores);
-
-  // Iterate
-  document.getElementById('iterate-btn').onclick = ()=>{
-    const inst = document.getElementById('iterate-input').value.trim();
-    if(!inst){ toast('Describe how to refine it'); return; }
-    document.getElementById('prompt-input').value = improved;
-    updateCount('prompt');
-    analyzePrompt(inst);
-  };
-
-  // ── Save to history ──
-  const overallScore = lastScores ? Math.round((lastScores.clarity+lastScores.specificity+lastScores.tone+lastScores.overall)/4) : null;
-  saveToHistory({
-    tab:'prompt', original:input, improved, scores:lastScores,
-    score:overallScore,
-    time: new Date().toLocaleTimeString('en-GB',{hour12:false})
-  });
-
   const conf = parseInt(document.getElementById('m-conf').textContent)||92;
   logLine('ok', `forge complete · confidence ${conf}%`);
-  busy = false;
-  document.getElementById('status-ai').textContent = 'AI Online';
-  if(demoOn) scheduleDemo(4500);
-}
-
-/* ── RUN PROMPT against model ── */
-async function runPrompt(prompt, parentToken){
-  const wrap = document.getElementById('run-output-wrap');
-  wrap.innerHTML = `
-    <div class="run-output">
-      <div class="run-head"><span>▶ Model output</span><span id="run-tok-count">streaming…</span></div>
-      <pre id="run-pre"><span class="cursor-blink"></span></pre>
-    </div>`;
-  const pre = document.getElementById('run-pre');
-  let out = '';
-  try {
-    await streamSSE('/api/run-prompt', {prompt}, async (evt)=>{
-      if(parentToken !== runToken) return true;
-      if(evt.type==='token'){
-        out += evt.text;
-        pre.innerHTML = escHtml(out) + '<span class="cursor-blink"></span>';
-        pre.scrollTop = pre.scrollHeight;
-        document.getElementById('run-tok-count').textContent = `~${Math.ceil(out.length/4)} tokens`;
-      } else if(evt.type==='done'){
-        const cur = pre.querySelector('.cursor-blink');
-        if(cur) cur.remove();
-        logLine('ok','prompt run complete');
-        return true;
-      } else if(evt.type==='error'){
-        throw new Error(evt.message);
-      }
-    });
-  } catch(e){
-    pre.innerHTML = `<span style="color:var(--danger)">⚠ ${escHtml(e.message)}</span>`;
-  }
-}
-
-/* ── A/B COMPARE ── */
-async function abCompare(original, improved, scoresA){
-  const wrap = document.getElementById('ab-wrap-inner');
-  wrap.innerHTML = `<div style="margin-top:14px;font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace">Running A/B comparison…<span class="cursor-blink"></span></div>`;
-  // Score the original too
-  let scoresB = null;
-  try {
-    const r = await fetch('/api/score-prompt', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({prompt: original})
-    });
-    if(r.ok){ const d = await r.json(); scoresB = d; }
-  } catch(e){ /* silent */ }
-
-  const scoreA = scoresA ? Math.round((scoresA.clarity+scoresA.specificity+scoresA.tone+scoresA.overall)/4) : '?';
-  const scoreB = scoresB ? Math.round((scoresB.clarity+scoresB.specificity+scoresB.tone+scoresB.overall)/4) : '?';
-  const aWins = typeof scoreA === 'number' && typeof scoreB === 'number' && scoreA >= scoreB;
-
-  wrap.innerHTML = `
-    <div class="ab-wrap" style="margin-top:14px">
-      <div class="ab-version ${!aWins?'':'ab-winner'}">
-        <div class="ab-label"><span>Version A — Original</span><span class="ab-score">Score: ${scoreB}</span></div>
-        <div class="ab-text">${mdToHtml(original)}</div>
-      </div>
-      <div class="ab-version ${aWins?'ab-winner':''}">
-        <div class="ab-label"><span>Version B — Forged ${aWins?'✓ Winner':''}</span><span class="ab-score">Score: ${scoreA}</span></div>
-        <div class="ab-text">${mdToHtml(improved)}</div>
-      </div>
-    </div>`;
-  logLine('ok', `A/B · original:${scoreB} vs forged:${scoreA} · ${aWins?'forged wins':'original wins'}`);
-}
-
-/* ---------- SQL ANALYSIS ---------- */
-async function analyzeSql(){
-  const input = document.getElementById('sql-input').value.trim();
-  if(!input){ toast('Please describe what you need first'); return; }
-  cancelInFlight();
-  const token = ++runToken;
-  busy = true;
-  document.getElementById('status-ai').textContent = 'AI Working';
-
-  document.getElementById('results').innerHTML = `
-    <div class="result-card">
-      <div class="result-head">
-        <div class="result-title">Generated SQL <span class="badge live">STREAMING</span></div>
-        <button class="ghost-btn" id="copy-sql-btn">Copy</button>
-      </div>
-      <div class="result-body">
-        ${workingHTML("Generating SQL")}
-        <div class="code-wrap" style="margin-top:18px">
-          <div class="code-head">
-            <div class="code-dots"><span></span><span></span><span></span></div>
-            <span>query.sql</span>
-          </div>
-          <pre id="sql-stream"></pre>
-        </div>
-        <div class="iterate-wrap" style="margin-top:18px">
-          <input id="sql-iterate-input" placeholder="Refine… e.g. 'add pagination' or 'use a CTE instead'" />
-          <button class="iterate-btn" id="sql-iterate-btn">↺ Refine</button>
-        </div>
-      </div>
-    </div>`;
-
-  logLine('info', `nl→sql · "${input.slice(0,48)}${input.length>48?'…':''}"`);
-
-  await new Promise(r=>setTimeout(r, 600));
-  const w = document.querySelector('.working');
-  if(w) w.classList.add('done');
-  if(token !== runToken){ busy=false; return; }
-
-  const pre = document.getElementById('sql-stream');
-  pre.innerHTML = '<span class="cursor-blink"></span>';
-  let sqlRaw = '';
-
-  try {
-    await streamSSE('/api/generate-sql', {description:input, dialect:currentDialect}, async (evt)=>{
-      if(token !== runToken) return true;
-      if(evt.type==='model'){
-        logLine('info', `model → ${evt.model}`);
-      } else if(evt.type==='token'){
-        sqlRaw += evt.text;
-        pre.innerHTML = highlight(sqlRaw) + '<span class="cursor-blink"></span>';
-        pre.scrollTop = pre.scrollHeight;
-      } else if(evt.type==='done'){
-        pre.innerHTML = highlight(sqlRaw);
-        return true;
-      } else if(evt.type==='error'){
-        throw new Error(evt.message);
-      }
-    });
-  } catch(err){
-    logLine('err', 'API error: ' + err.message);
-    pre.innerHTML = `<span style="color:var(--danger)">⚠ ${escHtml(err.message)}</span>`;
-    busy = false;
-    document.getElementById('status-ai').textContent = 'AI Online';
-    return;
-  }
-
-  if(token !== runToken){ busy=false; return; }
-
-  const badge = document.querySelector('.result-head .badge');
-  if(badge){ badge.classList.remove('live'); badge.textContent = currentDialect.toUpperCase(); }
-  document.getElementById('copy-sql-btn').onclick = ()=>copyText(sqlRaw,'SQL copied');
-
-  document.getElementById('results').insertAdjacentHTML('beforeend', `
-    <div class="result-card">
-      <div class="result-head"><div class="result-title">Plan & Safety</div></div>
-      <div class="result-body">
-        <div class="two-col">
-          <div class="info-box">
-            <h4>Optimizations</h4>
-            <ul>
-              <li>Uses indexed columns in WHERE clause.</li>
-              <li>JOIN order chosen for smallest intermediate set.</li>
-              <li>Aggregates pushed down before HAVING.</li>
-            </ul>
-          </div>
-          <div class="info-box">
-            <h4>Safety checks</h4>
-            <ul>
-              <li>No destructive statements (DELETE / DROP).</li>
-              <li>Parameterizable — safe from SQL injection.</li>
-              <li>Read-only intent detected.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>`);
-
-  // ── SQL iterate ──
-  document.getElementById('sql-iterate-btn').onclick = ()=>{
-    const inst = document.getElementById('sql-iterate-input').value.trim();
-    if(!inst){ toast('Describe how to refine the SQL'); return; }
-    document.getElementById('sql-input').value = input + '\n\nAdditional requirement: ' + inst;
-    updateCount('sql');
-    analyzeSql();
-  };
-
-  // ── Save to history ──
-  saveToHistory({
-    tab:'sql', original:input, improved:sqlRaw, score:null,
-    time: new Date().toLocaleTimeString('en-GB',{hour12:false})
-  });
-
-  document.getElementById('m-conf').textContent = '94%';
-  document.getElementById('m-conf-d').textContent = '▲ verified';
-  logLine('ok', 'sql generated · plan verified · safe');
   busy = false;
   document.getElementById('status-ai').textContent = 'AI Online';
   if(demoOn) scheduleDemo(4500);
@@ -1640,9 +1261,7 @@ async function analyzeSql(){
         const raw = line.slice(5).trim();
         let evt;
         try { evt = JSON.parse(raw); } catch{ continue; }
-        if(evt.type === 'model'){
-          logLine('info', `model → ${evt.model}`);
-        } else if(evt.type === 'token'){
+        if(evt.type === 'token'){
           sqlRaw += evt.text;
           pre.innerHTML = highlight(sqlRaw) + '<span class="cursor-blink"></span>';
           pre.scrollTop = pre.scrollHeight;

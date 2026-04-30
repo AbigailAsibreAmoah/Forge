@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-One-command launcher: loads .env then starts uvicorn.
+One-command local launcher: loads .env then starts uvicorn with reload.
+For production (Railway), the Dockerfile CMD is used instead.
 """
 import os
 from pathlib import Path
@@ -20,6 +21,6 @@ import uvicorn  # noqa: E402
 
 if __name__ == "__main__":
     key = os.environ.get("GROQ_API_KEY", "")
-    if not key or key.startswith("sk-ant-your"):
+    if not key or key.startswith("gsk_your"):
         print("\n⚠  GROQ_API_KEY not set — copy .env.example to .env and add your key.\n")
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

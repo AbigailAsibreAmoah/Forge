@@ -21,26 +21,22 @@ app.add_middleware(
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-MODEL = "llama-3.3-70b-versatile"   # fast + capable; swap to mixtral-8x7b-32768 if preferred
+MODEL = "llama-3.3-70b-versatile"
 
 
 # ---------- MODELS ----------
 
 class PromptRequest(BaseModel):
     prompt: str
-    iterate: str | None = None
 
 class SqlRequest(BaseModel):
     description: str
     dialect: str = "PostgreSQL"
 
-class ScoreRequest(BaseModel):
-    prompt: str
-
 
 # ---------- HELPERS ----------
 
-def groq_headers():
+def groq_headers() -> dict:
     return {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json",
@@ -52,14 +48,14 @@ def sse(data: dict) -> str:
 
 
 async def stream_groq(system: str, user: str):
-    """Yield raw text tokens from Groq streaming API (OpenAI-compatible)."""
+    """Yield raw text tokens from Groq's OpenAI-compatible streaming API."""
     payload = {
         "model": MODEL,
         "max_tokens": 1024,
         "stream": True,
         "messages": [
             {"role": "system", "content": system},
-            {"role": "user", "content": user},
+            {"role": "user",   "content": user},
         ],
     }
     async with httpx.AsyncClient(timeout=60) as client:
@@ -70,18 +66,18 @@ async def stream_groq(system: str, user: str):
                 body = await resp.aread()
                 raise HTTPException(status_code=resp.status_code, detail=body.decode())
             async for line in resp.aiter_lines():
-                if line.startswith("data:"):
-                    raw = line[5:].strip()
-                    if raw == "[DONE]":
-                        break
-                    try:
-                        evt = json.loads(raw)
-                    except Exception:
-                        continue
-                    delta = evt.get("choices", [{}])[0].get("delta", {})
-                    text = delta.get("content")
-                    if text:
-                        yield text
+                if not line.startswith("data:"):
+                    continue
+                raw = line[5:].strip()
+                if raw == "[DONE]":
+                    break
+                try:
+                    evt = json.loads(raw)
+                except Exception:
+                    continue
+                text = evt.get("choices", [{}])[0].get("delta", {}).get("content")
+                if text:
+                    yield text
 
 
 async def call_groq(system: str, user: str, max_tokens: int = 256) -> str:
@@ -92,15 +88,14 @@ async def call_groq(system: str, user: str, max_tokens: int = 256) -> str:
         "stream": False,
         "messages": [
             {"role": "system", "content": system},
-            {"role": "user", "content": user},
+            {"role": "user",   "content": user},
         ],
     }
     async with httpx.AsyncClient(timeout=30) as client:
         r = await client.post(GROQ_URL, headers=groq_headers(), json=payload)
         if r.status_code != 200:
             raise HTTPException(status_code=r.status_code, detail=r.text)
-        data = r.json()
-        return data["choices"][0]["message"]["content"].strip()
+        return r.json()["choices"][0]["message"]["content"].strip()
 
 
 # ---------- ROUTES ----------
@@ -108,42 +103,37 @@ async def call_groq(system: str, user: str, max_tokens: int = 256) -> str:
 @app.post("/api/forge-prompt")
 async def forge_prompt(req: PromptRequest):
     """
-    Stream an improved prompt + quality scores.
-    SSE: { type: "model" } | { type: "token", text } | { type: "scores", clarity, specificity, tone, overall } | { type: "done" } | { type: "error" }
+    Stream an improved prompt, then emit quality scores.
+    SSE events:
+      { type: "token",  text: "..." }
+      { type: "scores", clarity, specificity, tone, overall }
+      { type: "done" }
+      { type: "error",  message: "..." }
     """
     if not GROQ_API_KEY:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
 
-    if req.iterate:
-        system = (
-            "You are an expert prompt engineer. "
-            f"The user wants to refine their prompt with this instruction: {req.iterate}. "
-            "Apply the refinement while keeping the prompt maximally effective for a large language model. "
-            "Return ONLY the refined prompt text, nothing else."
-        )
-    else:
-        system = (
-            "You are an expert prompt engineer. "
-            "When given a raw prompt, rewrite it to be maximally effective for a large language model: "
-            "add an expert role framing, set a clear tone and target audience, constrain the output format, "
-            "and require a concrete takeaway. Keep it concise — under 280 words. "
-            "Return ONLY the improved prompt text, nothing else."
-        )
+    forge_system = (
+        "You are an expert prompt engineer. "
+        "When given a raw prompt, rewrite it to be maximally effective for a large language model: "
+        "add an expert role framing, set a clear tone and target audience, constrain the output format, "
+        "and require a concrete takeaway. Keep it concise — under 280 words. "
+        "Return ONLY the improved prompt text, nothing else."
+    )
 
     scores_system = (
         "You are a prompt quality evaluator. "
         "Given a prompt, return ONLY a JSON object with keys: clarity, specificity, tone, overall. "
-        "Each value is an integer from 0-100. No explanation, no markdown — raw JSON only."
+        "Each value is an integer from 0-100 representing quality in that dimension. "
+        "No explanation, no markdown — raw JSON only."
     )
 
     async def event_stream():
         try:
-            yield sse({"type": "model", "model": MODEL})
-
-            async for token in stream_groq(system, req.prompt):
+            async for token in stream_groq(forge_system, req.prompt):
                 yield sse({"type": "token", "text": token})
 
-            # Scores (non-streaming)
+            # Non-streaming scores call
             raw_json = await call_groq(scores_system, req.prompt, max_tokens=128)
             raw_json = raw_json.strip("`").strip()
             if raw_json.startswith("json"):
@@ -158,52 +148,14 @@ async def forge_prompt(req: PromptRequest):
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
-@app.post("/api/run-prompt")
-async def run_prompt(req: PromptRequest):
-    """
-    Run the prompt directly against the model and stream the output.
-    SSE: { type: "token", text } | { type: "done" } | { type: "error" }
-    """
-    if not GROQ_API_KEY:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
-
-    async def event_stream():
-        try:
-            async for token in stream_groq("You are a helpful assistant.", req.prompt):
-                yield sse({"type": "token", "text": token})
-            yield sse({"type": "done"})
-        except Exception as e:
-            yield sse({"type": "error", "message": str(e)})
-
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
-
-
-@app.post("/api/score-prompt")
-async def score_prompt(req: ScoreRequest):
-    """
-    Return quality scores for a prompt (used by A/B compare).
-    Returns JSON: { clarity, specificity, tone, overall }
-    """
-    if not GROQ_API_KEY:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
-
-    scores_system = (
-        "You are a prompt quality evaluator. "
-        "Given a prompt, return ONLY a JSON object with keys: clarity, specificity, tone, overall. "
-        "Each value is an integer from 0-100. No explanation, no markdown — raw JSON only."
-    )
-    raw_json = await call_groq(scores_system, req.prompt, max_tokens=128)
-    raw_json = raw_json.strip("`").strip()
-    if raw_json.startswith("json"):
-        raw_json = raw_json[4:].strip()
-    return json.loads(raw_json)
-
-
 @app.post("/api/generate-sql")
 async def generate_sql(req: SqlRequest):
     """
-    Stream generated SQL for a natural-language description.
-    SSE: { type: "token", text } | { type: "done" } | { type: "error" }
+    Stream SQL generated from a natural-language description.
+    SSE events:
+      { type: "token", text: "..." }
+      { type: "done" }
+      { type: "error", message: "..." }
     """
     if not GROQ_API_KEY:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
@@ -232,7 +184,7 @@ async def health():
     return {"status": "ok", "model": MODEL, "api_key_set": bool(GROQ_API_KEY)}
 
 
-# Serve static files last so API routes take priority
+# Static files — must be mounted last so API routes take priority
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 
