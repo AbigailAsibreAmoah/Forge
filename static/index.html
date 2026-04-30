@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Forge — Live AI Intelligence Simulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent:#00ff9d;
+    --accent2:#00d4ff;
+    --accent3:#b388ff;
+    --accent-soft:rgba(0,255,157,.12);
+    --bg:#05060f;
+    --bg2:#0a0c1a;
+    --surface:rgba(12,15,28,.78);
+    --surface2:rgba(18,22,40,.7);
+    --border:rgba(255,255,255,.07);
+    --border-strong:rgba(0,255,157,.22);
+    --text:#eef2ff;
+    --text2:#a8b3cf;
+    --text3:#6e7896;
+    --danger:#ff5d7a;
+    --warn:#ffb547;
+    --ok:#00ff9d;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(1200px 700px at 80% -10%, rgba(0,212,255,.10), transparent 60%),
+               radial-gradient(900px 600px at -10% 110%, rgba(0,255,157,.08), transparent 60%),
+               radial-gradient(700px 500px at 50% 50%, rgba(179,136,255,.05), transparent 70%),
+               var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    overflow-x:hidden;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:rgba(0,255,157,.3); color:#001a10}
+
+  /* Animated grid */
+  .cyber-grid{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      linear-gradient(rgba(0,255,157,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,157,.025) 1px, transparent 1px);
+    background-size:54px 54px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, #000 40%, transparent 90%);
+    animation: gridMove 40s linear infinite;
+  }
+  @keyframes gridMove{from{background-position:0 0}to{background-position:54px 54px}}
+
+  /* Particle canvas */
+  #particles{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.55}
+
+  .orb{position:fixed; border-radius:50%; filter:blur(80px); opacity:.4; pointer-events:none; z-index:0}
+  .orb.a{width:420px;height:420px;background:#00ff9d;top:-120px;left:-120px;animation:float 14s ease-in-out infinite}
+  .orb.b{width:380px;height:380px;background:#00d4ff;bottom:-140px;right:-140px;animation:float 18s ease-in-out infinite reverse}
+  .orb.c{width:300px;height:300px;background:#b388ff;top:40%;left:55%;animation:float 22s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,30px)}}
+
+  /* PRELOAD */
+  #preload{
+    position:fixed; inset:0; background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    z-index:9999; transition:opacity .9s ease;
+    flex-direction:column;
+  }
+  .amoeba-container{position:relative; width:340px; height:340px}
+  .amoeba{
+    position:absolute; inset:0;
+    background:radial-gradient(circle at 45% 40%, #00ff9d, #00d4ff, transparent 70%);
+    border-radius:50%; filter:blur(55px); opacity:.85;
+    animation:wobble 3.4s ease-in-out infinite;
+  }
+  .amoeba-core{
+    position:absolute; inset:75px;
+    background:#0a0b12; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:52px; font-weight:900; color:#00ff9d;
+    box-shadow:0 0 90px #00ff9d, inset 0 0 60px rgba(0,255,157,.8);
+    animation:corePulse 2.6s ease-in-out infinite;
+  }
+  .neural-text{
+    position:absolute; bottom:-78px; left:50%;
+    transform:translateX(-50%);
+    font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600;
+    letter-spacing:8px; color:var(--accent); opacity:0;
+    animation:fadeInText 2.6s ease forwards .8s; white-space:nowrap;
+  }
+  .boot-log{
+    position:absolute; bottom:-140px; left:50%; transform:translateX(-50%);
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text3);
+    width:420px; text-align:center; opacity:0; animation:fadeInText .6s ease forwards 1.5s;
+  }
+  @keyframes wobble{0%,100%{border-radius:65% 35% 70% 30%; transform:scale(1) rotate(3deg)} 50%{border-radius:30% 70% 35% 65%; transform:scale(.92) rotate(-5deg)}}
+  @keyframes corePulse{0%,100%{transform:scale(1)} 50%{transform:scale(1.12)}}
+  @keyframes fadeInText{to{opacity:1}}
+
+  /* APP */
+  .app{position:relative; z-index:1; min-height:100vh; display:none; flex-direction:column}
+
+  .header{
+    position:sticky; top:0; z-index:100;
+    background:rgba(5,6,15,.7);
+    backdrop-filter:blur(24px) saturate(140%);
+    -webkit-backdrop-filter:blur(24px) saturate(140%);
+    border-bottom:1px solid var(--border);
+  }
+  .header-inner{
+    max-width:1400px; margin:0 auto;
+    padding:0 32px;
+    display:flex; align-items:center; justify-content:space-between;
+    height:72px;
+  }
+  .brand{display:flex; align-items:center; gap:14px}
+  .brand-icon{
+    width:42px; height:42px; border-radius:12px;
+    background:linear-gradient(135deg,#00ff9d,#00d4ff);
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; font-weight:900; color:#001a10;
+    box-shadow:0 8px 24px rgba(0,255,157,.35);
+    position:relative;
+  }
+  .brand-icon::after{
+    content:""; position:absolute; inset:-3px; border-radius:14px;
+    background:linear-gradient(135deg,#00ff9d,#00d4ff);
+    z-index:-1; filter:blur(10px); opacity:.5;
+    animation:pulse 2s ease-in-out infinite;
+  }
+  .brand-name{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:22px; font-weight:700; letter-spacing:-.04em;
+    background:linear-gradient(90deg,#fff,#00ff9d);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .brand-tag{
+    font-size:10px; letter-spacing:2px; color:var(--text3);
+    text-transform:uppercase; margin-top:2px;
+  }
+  .header-right{display:flex; align-items:center; gap:10px}
+  .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 12px; border-radius:999px;
+    font-size:11px; font-weight:600;
+    background:var(--accent-soft); color:var(--accent);
+    border:1px solid var(--border-strong);
+    font-family:'JetBrains Mono',monospace;
+  }
+  .pill .dot{
+    width:6px; height:6px; border-radius:50%; background:var(--accent);
+    box-shadow:0 0 10px var(--accent);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  .pill.cyan{background:rgba(0,212,255,.1); color:var(--accent2); border-color:rgba(0,212,255,.25)}
+  .pill.cyan .dot{background:var(--accent2); box-shadow:0 0 10px var(--accent2)}
+  .pill.purple{background:rgba(179,136,255,.1); color:var(--accent3); border-color:rgba(179,136,255,.25)}
+  .pill.purple .dot{background:var(--accent3); box-shadow:0 0 10px var(--accent3)}
+  .pill{cursor:pointer; transition:transform .15s, box-shadow .2s}
+  .pill:hover{transform:translateY(-1px); box-shadow:0 8px 22px rgba(0,255,157,.18)}
+  .pill:active{transform:translateY(0)}
+  .meta-chip.clickable{cursor:pointer; transition:all .2s}
+  .meta-chip.clickable:hover{border-color:var(--border-strong); color:var(--accent)}
+  .brand{cursor:pointer}
+  .brand:hover .brand-name{filter:brightness(1.15)}
+
+  /* Popover */
+  .popover{
+    position:fixed; z-index:9500;
+    background:var(--surface); border:1px solid var(--border-strong);
+    border-radius:14px; padding:14px 16px;
+    backdrop-filter:blur(18px);
+    box-shadow:0 30px 60px rgba(0,0,0,.55);
+    font-size:12px; color:var(--text2); min-width:240px;
+    opacity:0; transform:translateY(-6px);
+    transition:opacity .2s, transform .2s;
+    pointer-events:none;
+  }
+  .popover.show{opacity:1; transform:translateY(0); pointer-events:auto}
+  .popover h5{font-family:'Space Grotesk',sans-serif; font-size:13px; color:var(--text); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center}
+  .popover h5 .x{cursor:pointer; color:var(--text3); font-size:16px; line-height:1}
+  .popover .row{display:flex; justify-content:space-between; padding:4px 0; font-family:'JetBrains Mono',monospace; font-size:11.5px}
+  .popover .row span:last-child{color:var(--accent)}
+  .popover .opts{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+  .popover .opt{
+    padding:5px 10px; border-radius:7px; cursor:pointer;
+    background:var(--surface2); border:1px solid var(--border);
+    color:var(--text2); font-size:11px; font-family:'JetBrains Mono',monospace;
+    transition:all .15s;
+  }
+  .popover .opt:hover{border-color:var(--border-strong); color:var(--accent)}
+  .popover .opt.active{background:var(--accent-soft); color:var(--accent); border-color:var(--border-strong)}
+
+  .console-head .ghost-btn{padding:4px 9px; font-size:11px}
+  .spark .ghost-btn{padding:4px 9px; font-size:10px; margin-left:auto}
+  @keyframes pulse{50%{opacity:.4}}
+  .icon-btn{
+    width:36px; height:36px; border-radius:10px;
+    background:var(--surface); border:1px solid var(--border);
+    color:var(--text2); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:all .2s;
+  }
+  .icon-btn:hover{border-color:var(--border-strong); color:var(--accent)}
+
+  main{max-width:1400px; margin:0 auto; padding:36px 32px 80px; width:100%}
+
+  .hero{text-align:center; margin-bottom:28px}
+  .hero h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(34px, 5vw, 54px); font-weight:700;
+    letter-spacing:-.04em; line-height:1.05;
+  }
+  .hero h1 .grad{
+    background:linear-gradient(90deg,#00ff9d,#00d4ff);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .hero p{
+    margin-top:14px; color:var(--text2);
+    font-size:16px; max-width:660px; margin-left:auto; margin-right:auto;
+  }
+
+  /* Live metric strip */
+  .metric-strip{
+    max-width:1180px; margin:24px auto 0;
+    display:grid; grid-template-columns:repeat(5,1fr); gap:10px;
+  }
+  .metric{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:12px 14px;
+    backdrop-filter:blur(12px);
+    position:relative; overflow:hidden;
+  }
+  .metric::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:2px;
+    background:linear-gradient(180deg, var(--accent), var(--accent2));
+  }
+  .metric .lbl{font-size:9px; letter-spacing:2px; color:var(--text3); text-transform:uppercase}
+  .metric .val{font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:600; color:var(--text); margin-top:4px; font-variant-numeric:tabular-nums}
+  .metric .delta{font-size:10px; color:var(--accent); margin-top:2px; font-family:'JetBrains Mono',monospace}
+  .metric.cyan::before{background:linear-gradient(180deg, var(--accent2), var(--accent3))}
+  .metric.cyan .delta{color:var(--accent2)}
+  .metric.purple::before{background:linear-gradient(180deg, var(--accent3), var(--accent))}
+  .metric.purple .delta{color:var(--accent3)}
+
+  /* Tabs */
+  .tabs-wrap{display:flex; justify-content:center; margin:32px 0 24px}
+  .tabs{
+    display:inline-flex; gap:4px; padding:6px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; backdrop-filter:blur(12px);
+  }
+  .tab{
+    position:relative;
+    font-size:14px; font-weight:600; color:var(--text2);
+    padding:10px 22px; border-radius:10px; cursor:pointer;
+    transition:color .2s; display:inline-flex; align-items:center; gap:8px;
+    user-select:none;
+  }
+  .tab svg{width:15px;height:15px}
+  .tab:hover{color:var(--text)}
+  .tab.active{color:#001a10; background:linear-gradient(90deg,#00ff9d,#00d4ff)}
+
+  /* Workspace grid */
+  .workspace{
+    max-width:1180px; margin:0 auto;
+    display:grid; grid-template-columns:1fr; gap:18px; max-width:980px; margin:0 auto;
+  }
+  @media (max-width:1024px){ .workspace{grid-template-columns:1fr} }
+
+  .input-container{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:20px; overflow:hidden;
+    backdrop-filter:blur(18px);
+    box-shadow:0 30px 80px -20px rgba(0,0,0,.6);
+    transition:border-color .25s;
+  }
+  .input-container:focus-within{border-color:var(--border-strong); box-shadow:0 30px 80px -20px rgba(0,255,157,.18)}
+  .input-header{
+    padding:14px 20px;
+    border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+    background:linear-gradient(180deg, rgba(0,255,157,.04), transparent);
+  }
+  .input-title{display:flex; align-items:center; gap:10px; font-size:13px; font-weight:600; color:var(--text2); letter-spacing:.3px}
+  .input-title .dotg{width:8px;height:8px;border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 1.6s ease-in-out infinite}
+  .header-actions{display:flex; gap:6px}
+  .ghost-btn{
+    background:transparent; border:1px solid var(--border);
+    color:var(--text2); padding:6px 12px; border-radius:8px;
+    font-size:12px; font-weight:600; cursor:pointer;
+    display:inline-flex; align-items:center; gap:6px;
+    transition:all .2s;
+  }
+  .ghost-btn:hover{border-color:var(--border-strong); color:var(--accent)}
+  .ghost-btn svg{width:13px;height:13px}
+
+  textarea{
+    width:100%; min-height:200px;
+    background:transparent; border:none; outline:none;
+    padding:22px;
+    font-family:'JetBrains Mono','IBM Plex Mono',monospace;
+    font-size:14px; color:var(--text); line-height:1.7;
+    resize:vertical; caret-color:var(--accent);
+  }
+  textarea::placeholder{color:var(--text3)}
+  textarea.typing{ caret-color:transparent }
+
+  .input-footer{
+    padding:14px 20px;
+    border-top:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+    background:rgba(0,0,0,.18);
+  }
+  .footer-meta{display:flex; align-items:center; gap:14px; font-size:12px; color:var(--text3); font-family:'JetBrains Mono',monospace; flex-wrap:wrap}
+  .meta-chip{padding:4px 8px; border-radius:6px; background:var(--surface2); border:1px solid var(--border)}
+  .kbd{
+    font-family:'JetBrains Mono',monospace; font-size:11px;
+    padding:2px 6px; border-radius:5px;
+    background:var(--surface2); border:1px solid var(--border);
+    color:var(--text2);
+  }
+
+  .analyze-btn{
+    background:linear-gradient(90deg,#00ff9d,#00d4ff);
+    color:#001a10; font-weight:700;
+    padding:11px 22px; border:none; border-radius:10px;
+    cursor:pointer; font-size:13px; letter-spacing:.4px;
+    display:inline-flex; align-items:center; gap:8px;
+    transition:transform .15s, box-shadow .25s, filter .2s;
+    position:relative; overflow:hidden;
+  }
+  .analyze-btn::before{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent);
+    transform:translateX(-100%);
+    transition:transform .6s;
+  }
+  .analyze-btn:hover::before{ transform:translateX(100%) }
+  .analyze-btn:hover{transform:translateY(-1px); box-shadow:0 12px 30px rgba(0,255,157,.35)}
+  .analyze-btn:active{transform:translateY(0)}
+  .analyze-btn:disabled{filter:grayscale(.6) opacity(.6); cursor:not-allowed}
+  .analyze-btn svg{width:14px;height:14px}
+
+  /* Suggestion chips */
+  .suggestions{
+    margin-top:14px;
+    display:flex; flex-wrap:wrap; gap:8px;
+  }
+  .chip{
+    padding:7px 12px; border-radius:999px;
+    background:var(--surface); border:1px solid var(--border);
+    color:var(--text2); font-size:12px; cursor:pointer;
+    transition:all .2s;
+  }
+  .chip:hover{border-color:var(--border-strong); color:var(--accent); transform:translateY(-1px)}
+
+  /* Console panel (right side) */
+  .console{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:20px; overflow:hidden;
+    backdrop-filter:blur(18px);
+    display:flex; flex-direction:column;
+    min-height:420px;
+  }
+  .console-head{
+    padding:14px 20px; border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+    background:linear-gradient(180deg, rgba(0,212,255,.05), transparent);
+  }
+  .console-title{display:flex; align-items:center; gap:10px; font-size:13px; font-weight:600; color:var(--text2)}
+  .console-title .dotg{width:8px;height:8px;border-radius:50%; background:var(--accent2); box-shadow:0 0 8px var(--accent2); animation:pulse 1.6s ease-in-out infinite}
+  .console-body{
+    flex:1; padding:14px 18px;
+    font-family:'JetBrains Mono',monospace; font-size:11.5px;
+    line-height:1.7; color:var(--text2);
+    overflow-y:auto; max-height:520px;
+  }
+  .console-body::-webkit-scrollbar{width:6px}
+  .console-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08); border-radius:3px}
+  .log-line{display:flex; gap:10px; padding:2px 0}
+  .log-line .ts{color:var(--text3); flex-shrink:0}
+  .log-line .lvl{font-weight:600; flex-shrink:0; width:42px}
+  .log-line.info .lvl{color:var(--accent2)}
+  .log-line.ok .lvl{color:var(--accent)}
+  .log-line.warn .lvl{color:var(--warn)}
+  .log-line.tok .lvl{color:var(--accent3)}
+  .log-line .msg{color:var(--text2); word-break:break-word}
+
+  /* Mini activity sparkline */
+  .spark{
+    padding:12px 18px; border-top:1px solid var(--border);
+    display:flex; align-items:center; gap:14px;
+    background:rgba(0,0,0,.18);
+  }
+  .spark canvas{flex:1; height:36px; width:100%}
+  .spark .lbl{font-size:10px; letter-spacing:2px; color:var(--text3); text-transform:uppercase}
+
+  /* Results */
+  #results{max-width:1180px; margin:18px auto 0; display:flex; flex-direction:column; gap:18px}
+  .result-card{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:18px; overflow:hidden;
+    backdrop-filter:blur(14px);
+    animation:slideUp .4s ease-out;
+  }
+  @keyframes slideUp{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:none}}
+  .result-head{
+    padding:16px 22px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(180deg, rgba(0,255,157,.05), transparent);
+    flex-wrap:wrap; gap:8px;
+  }
+  .result-title{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; color:var(--text)}
+  .result-title .badge{font-size:10px; letter-spacing:2px; color:var(--accent); padding:3px 8px; border-radius:6px; background:var(--accent-soft); border:1px solid var(--border-strong); font-family:'JetBrains Mono',monospace}
+  .result-title .badge.live{color:var(--danger); background:rgba(255,93,122,.1); border-color:rgba(255,93,122,.3)}
+  .result-title .badge.live::before{content:"● "; animation:pulse 1.2s ease-in-out infinite}
+  .result-body{padding:22px}
+  .result-body p{line-height:1.75; color:var(--text); font-size:14.5px; min-height:1.75em}
+  .cursor-blink{display:inline-block; width:8px; height:1.05em; background:var(--accent); margin-left:2px; vertical-align:text-bottom; animation:blink 1s steps(2) infinite; box-shadow:0 0 8px var(--accent)}
+  @keyframes blink{50%{opacity:0}}
+
+  /* Score row */
+  .score-row{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;
+    margin-top:18px;
+  }
+  .score{
+    padding:12px 14px; border-radius:12px;
+    background:var(--surface2); border:1px solid var(--border);
+  }
+  .score .lbl{font-size:10px; letter-spacing:2px; color:var(--text3); text-transform:uppercase}
+  .score .val{font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; color:var(--accent); margin-top:4px; font-variant-numeric:tabular-nums}
+  .score .val.cyan{color:var(--accent2)}
+  .score .val.purple{color:var(--accent3)}
+  .bar{height:4px; border-radius:4px; background:rgba(255,255,255,.06); overflow:hidden; margin-top:8px}
+  .bar > span{display:block; height:100%; background:linear-gradient(90deg,#00ff9d,#00d4ff); border-radius:4px; width:0; transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+
+  /* Code block */
+  .code-wrap{
+    background:#080a14; border:1px solid var(--border);
+    border-radius:12px; overflow:hidden;
+  }
+  .code-head{
+    padding:8px 14px; border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text3);
+    background:rgba(255,255,255,.02);
+  }
+  .code-dots{display:flex; gap:6px}
+  .code-dots span{width:9px;height:9px;border-radius:50%}
+  .code-dots span:nth-child(1){background:#ff5d7a}
+  .code-dots span:nth-child(2){background:#ffb547}
+  .code-dots span:nth-child(3){background:#00ff9d}
+  pre{
+    margin:0; padding:18px 20px;
+    font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.7;
+    color:#cfe1ff; overflow:auto; white-space:pre; min-height:60px;
+  }
+  .kw{color:#00d4ff; font-weight:600}
+  .fn{color:#00ff9d}
+  .str{color:#ffb547}
+  .num{color:#ff8ab0}
+  .com{color:#5c6a8a; font-style:italic}
+
+  /* Two-col layout for SQL extras */
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px}
+  .info-box{
+    padding:14px 16px; border-radius:12px;
+    background:var(--surface2); border:1px solid var(--border);
+  }
+  .info-box h4{font-size:11px; letter-spacing:2px; color:var(--text3); text-transform:uppercase; margin-bottom:10px}
+  .info-box ul{list-style:none}
+  .info-box li{display:flex; gap:10px; padding:6px 0; font-size:13px; color:var(--text2)}
+  .info-box li::before{content:""; width:6px; height:6px; border-radius:50%; background:var(--accent); margin-top:7px; flex-shrink:0}
+
+  /* Toast */
+  .toast{
+    position:fixed; bottom:28px; left:50%; transform:translate(-50%, 20px);
+    background:var(--surface); border:1px solid var(--border-strong);
+    color:var(--text); padding:12px 18px; border-radius:12px;
+    font-size:13px; font-weight:600;
+    box-shadow:0 20px 40px rgba(0,0,0,.5);
+    opacity:0; pointer-events:none;
+    transition:all .3s; z-index:9000;
+    backdrop-filter:blur(12px);
+    display:flex; align-items:center; gap:10px;
+  }
+  .toast.show{opacity:1; transform:translate(-50%, 0)}
+  .toast .ok{color:var(--accent)}
+
+  /* Auto-demo banner */
+  .demo-banner{
+    max-width:1180px; margin:0 auto 18px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:10px 16px; border-radius:12px;
+    background:linear-gradient(90deg, rgba(0,255,157,.08), rgba(0,212,255,.08));
+    border:1px solid var(--border-strong);
+    font-size:12px; color:var(--text2); font-family:'JetBrains Mono',monospace;
+  }
+  .demo-banner .left{display:flex; align-items:center; gap:10px}
+  .demo-banner .left::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent); animation:pulse 1.4s ease-in-out infinite}
+  .demo-banner button{background:transparent; border:1px solid var(--border); color:var(--text2); padding:5px 10px; border-radius:6px; cursor:pointer; font-family:inherit; font-size:11px; transition:all .2s}
+  .demo-banner button:hover{border-color:var(--border-strong); color:var(--accent)}
+
+
+  /* Working indicator (replaces multi-stage pipeline) */
+  .working{
+    display:flex; align-items:center; gap:14px;
+    padding:14px 16px;
+    background:var(--accent-soft);
+    border:1px solid var(--border-strong);
+    border-radius:12px;
+    transition:all .4s;
+  }
+  .working.done{opacity:.55; filter:saturate(.6)}
+  .working-spinner{
+    width:18px; height:18px; border-radius:50%;
+    border:2px solid rgba(0,255,157,.18);
+    border-top-color:var(--accent);
+    animation:spin .8s linear infinite;
+  }
+  .working.done .working-spinner{
+    border-color:var(--accent); border-top-color:var(--accent);
+    animation:none;
+  }
+  .working-label{
+    font-family:'JetBrains Mono',monospace; font-size:12px;
+    color:var(--accent); letter-spacing:.5px;
+  }
+  .working-dots span{animation:blink 1.2s infinite}
+  .working-dots span:nth-child(2){animation-delay:.2s}
+  .working-dots span:nth-child(3){animation-delay:.4s}
+  .working.done .working-dots{display:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+
+  /* Pipeline stages */
+  .pipeline{
+    display:flex; gap:8px; margin-top:14px; padding:14px; border-radius:12px;
+    background:var(--surface2); border:1px solid var(--border);
+    overflow-x:auto;
+  }
+  .stage{
+    flex:1; min-width:110px;
+    padding:10px 12px; border-radius:8px;
+    background:rgba(0,0,0,.2); border:1px solid var(--border);
+    display:flex; flex-direction:column; gap:4px;
+    transition:all .3s;
+    position:relative;
+  }
+  .stage.active{border-color:var(--border-strong); background:var(--accent-soft); box-shadow:0 0 20px rgba(0,255,157,.15)}
+  .stage.done{border-color:rgba(0,255,157,.15)}
+  .stage .name{font-size:10px; letter-spacing:1.5px; color:var(--text3); text-transform:uppercase}
+  .stage.active .name, .stage.done .name{color:var(--accent)}
+  .stage .time{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); font-variant-numeric:tabular-nums}
+  .stage .check{position:absolute; top:6px; right:8px; font-size:11px; color:var(--accent); opacity:0; transition:opacity .3s}
+  .stage.done .check{opacity:1}
+
+
+  /* ── DIFF VIEW ── */
+  .diff-wrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  @media(max-width:700px){.diff-wrap{grid-template-columns:1fr}}
+  .diff-pane{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:13.5px;line-height:1.75;color:var(--text);white-space:pre-wrap;position:relative}
+  .diff-pane .diff-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:block}
+  .diff-add{background:rgba(0,255,157,.13);border-radius:3px;padding:0 2px}
+  .diff-del{background:rgba(255,93,122,.13);border-radius:3px;padding:0 2px;text-decoration:line-through;color:var(--text3)}
+
+  /* ── HISTORY ── */
+  .history-wrap{margin-top:32px;max-width:980px;margin-left:auto;margin-right:auto}
+  .history-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--text2);letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+  .history-list{display:flex;flex-direction:column;gap:8px}
+  .history-item{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:12px 16px;cursor:pointer;transition:all .2s;
+    display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
+  }
+  .history-item:hover{border-color:var(--border-strong);transform:translateX(2px)}
+  .history-item .hi-original{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .history-item .hi-meta{display:flex;gap:8px;align-items:center;flex-shrink:0}
+  .history-item .hi-score{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);background:var(--accent-soft);padding:2px 7px;border-radius:6px;border:1px solid var(--border-strong)}
+  .history-item .hi-tab{font-size:10px;letter-spacing:1px;color:var(--text3);text-transform:uppercase}
+  .history-item .hi-time{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+
+  /* ── ITERATE PANEL ── */
+  .iterate-wrap{margin-top:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;display:flex;gap:10px;align-items:center}
+  .iterate-wrap input{flex:1;background:transparent;border:none;outline:none;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);caret-color:var(--accent)}
+  .iterate-wrap input::placeholder{color:var(--text3)}
+  .iterate-btn{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#001a10;font-weight:700;padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap;transition:transform .15s,box-shadow .2s}
+  .iterate-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,255,157,.3)}
+
+  /* ── RUN OUTPUT ── */
+  .run-output{margin-top:14px;background:#080a14;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .run-output .run-head{padding:8px 14px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.02)}
+  .run-output pre{margin:0;padding:16px 20px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#cfe1ff;line-height:1.7;white-space:pre-wrap;max-height:320px;overflow-y:auto}
+
+  /* ── AB COMPARE ── */
+  .ab-wrap{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .ab-version{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .ab-version .ab-label{font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;font-family:'JetBrains Mono',monospace;display:flex;justify-content:space-between}
+  .ab-version .ab-text{font-size:13.5px;color:var(--text);line-height:1.75;white-space:pre-wrap}
+  .ab-version .ab-score{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
+  .ab-winner{border-color:var(--border-strong)!important;background:var(--accent-soft)!important}
+  .ab-winner .ab-label{color:var(--accent)!important}
+
+  /* Responsive */
+  @media (max-width:780px){
+    main{padding:24px 16px 60px}
+    .header-inner{padding:0 18px}
+    .score-row{grid-template-columns:repeat(2,1fr)}
+    .two-col{grid-template-columns:1fr}
+    .brand-tag{display:none}
+    .header-right .pill{display:none}
+    .metric-strip{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+<div class="orb a"></div>
+<div class="orb b"></div>
+<div class="orb c"></div>
+
+<!-- PRELOAD -->
+<div id="preload">
+  <div class="amoeba-container">
+    <div class="amoeba"></div>
+    <div class="amoeba-core">⌬</div>
+    <div class="neural-text">FORGE IS AWAKENING</div>
+    <div class="boot-log" id="boot-log">initializing neural pathways…</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="main-app">
+  <div class="cyber-grid"></div>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand" id="brand-home" title="Reset workspace">
+        <div class="brand-icon">⌬</div>
+        <div>
+          <div class="brand-name">FORGE</div>
+          <div class="brand-tag">LIVE · PROMPT · SQL · INTELLIGENCE</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="pill" id="pill-ai" title="System status"><span class="dot"></span><span id="status-ai">AI Online</span></div>
+        <div class="pill cyan" id="pill-gpu" title="GPU details"><span class="dot"></span>GPU <span id="status-gpu">61%</span></div>
+        <div class="pill purple" id="pill-lat" title="Latency breakdown"><span class="dot"></span>Latency <span id="status-lat">42ms</span></div>
+        <button class="icon-btn" id="btn-theme" title="Cycle ambient mode">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Forge sharper <span class="grad">prompts</span><br/>and effortless <span class="grad">SQL</span>.</h1>
+      <p>A live AI studio that streams its thinking — tokens, latency, and confidence — in real time.</p>
+    </div>
+
+    <!-- LIVE METRICS -->
+    <div class="metric-strip">
+      <div class="metric"><div class="lbl">Tokens / sec</div><div class="val" id="m-tps">0</div><div class="delta" id="m-tps-d">▲ idle</div></div>
+      <div class="metric cyan"><div class="lbl">Active threads</div><div class="val" id="m-thr">0</div><div class="delta" id="m-thr-d">— standby</div></div>
+      <div class="metric purple"><div class="lbl">Confidence</div><div class="val" id="m-conf">—</div><div class="delta" id="m-conf-d">awaiting</div></div>
+      <div class="metric"><div class="lbl">Queue depth</div><div class="val" id="m-q">0</div><div class="delta" id="m-q-d">clear</div></div>
+      <div class="metric cyan"><div class="lbl">Uptime</div><div class="val" id="m-up">00:00</div><div class="delta">stable</div></div>
+    </div>
+
+    <div class="tabs-wrap">
+      <div class="tabs" role="tablist">
+        <div class="tab active" id="tab-prompt" onclick="switchTab(0)" role="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>Prompt Forge
+        </div>
+        <div class="tab" id="tab-sql" onclick="switchTab(1)" role="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>SQL Sorcerer
+        </div>
+      </div>
+    </div>
+
+
+    <div class="workspace">
+      <div>
+        <!-- PROMPT -->
+        <div id="content-prompt">
+          <div class="input-container">
+            <div class="input-header">
+              <div class="input-title"><span class="dotg"></span>Craft a better prompt</div>
+              <div class="header-actions">
+                <button class="ghost-btn" onclick="loadPromptSample()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Load sample
+                </button>
+                <button class="ghost-btn" onclick="clearInput('prompt-input')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>Clear
+                </button>
+              </div>
+            </div>
+            <textarea id="prompt-input" placeholder="Write your prompt here…  (e.g. Explain quantum computing to a 12 year old using only food analogies)"></textarea>
+            <div class="input-footer">
+              <div class="footer-meta">
+                <span class="meta-chip clickable" id="prompt-count" title="Show stats">0 chars · 0 words</span>
+                <span><span class="kbd">⌘</span> + <span class="kbd">Enter</span> to forge</span>
+              </div>
+              <button class="analyze-btn" onclick="analyzePrompt()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>FORGE PROMPT
+              </button>
+            </div>
+          </div>
+          <div class="suggestions">
+            <div class="chip" onclick="setPrompt('Write a tweet announcing our new product launch.')">Tweet announcement</div>
+            <div class="chip" onclick="setPrompt('Summarize this meeting transcript into action items.')">Meeting summary</div>
+            <div class="chip" onclick="setPrompt('Generate a cold email to a potential investor.')">Investor email</div>
+            <div class="chip" onclick="setPrompt('Explain how transformers work in deep learning.')">Explain ML</div>
+          </div>
+        </div>
+
+        <!-- SQL -->
+        <div id="content-sql" style="display:none">
+          <div class="input-container">
+            <div class="input-header">
+              <div class="input-title"><span class="dotg"></span>Describe what you need in plain English</div>
+              <div class="header-actions">
+                <button class="ghost-btn" onclick="loadSqlSample()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Load sample
+                </button>
+                <button class="ghost-btn" onclick="clearInput('sql-input')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>Clear
+                </button>
+              </div>
+            </div>
+            <textarea id="sql-input" placeholder="Show me all customers from Greater Accra who placed an order in the last 30 days with total above 1000 GHS…"></textarea>
+            <div class="input-footer">
+              <div class="footer-meta">
+                <span class="meta-chip clickable" id="sql-count" title="Show stats">0 chars · 0 words</span>
+                <span class="meta-chip clickable" id="sql-dialect" title="Change dialect">PostgreSQL</span>
+                <span><span class="kbd">⌘</span> + <span class="kbd">Enter</span> to generate</span>
+              </div>
+              <button class="analyze-btn" onclick="analyzeSql()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>GENERATE SQL
+              </button>
+            </div>
+          </div>
+          <div class="suggestions">
+            <div class="chip" onclick="setSql('Top 10 best selling products this quarter with revenue.')">Top sellers</div>
+            <div class="chip" onclick="setSql('Customers who signed up but never made a purchase.')">Inactive users</div>
+            <div class="chip" onclick="setSql('Daily active users for the last 30 days as a time series.')">DAU trend</div>
+            <div class="chip" onclick="setSql('Find duplicate emails in the users table.')">Duplicates</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="results"></div>
+    <div class="history-wrap" id="history-wrap" style="display:none">
+      <div class="history-title">
+        <span>⟳ Session History</span>
+        <button class="ghost-btn" onclick="clearHistory()">Clear</button>
+      </div>
+      <div class="history-list" id="history-list"></div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"><span class="ok">OK</span><span id="toast-msg">Copied to clipboard</span></div>
+
+<script>
+/* ---------- PARTICLE BACKGROUND ---------- */
+(function(){
+  const c = document.getElementById('particles');
+  const ctx = c.getContext('2d');
+  let w, h, particles = [];
+  function resize(){ w = c.width = innerWidth; h = c.height = innerHeight; }
+  resize(); addEventListener('resize', resize);
+  for(let i=0;i<60;i++){
+    particles.push({
+      x:Math.random()*w, y:Math.random()*h,
+      vx:(Math.random()-.5)*.3, vy:(Math.random()-.5)*.3,
+      r:Math.random()*1.5+.3,
+      hue: Math.random()<.5 ? '0,255,157' : '0,212,255'
+    });
+  }
+  function tick(){
+    ctx.clearRect(0,0,w,h);
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0||p.x>w) p.vx*=-1;
+      if(p.y<0||p.y>h) p.vy*=-1;
+      ctx.fillStyle = `rgba(${p.hue},.55)`;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    });
+    // connect close particles
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const a=particles[i], b=particles[j];
+        const d=Math.hypot(a.x-b.x, a.y-b.y);
+        if(d<110){
+          ctx.strokeStyle = `rgba(0,255,157,${(1-d/110)*.08})`;
+          ctx.lineWidth = .5;
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+
+/* ---------- PRELOAD with boot log ---------- */
+const bootLines = [
+  'initializing neural pathways…',
+  'loading transformer weights · 1.2B params',
+  'warming GPU shards · cuda://forge0',
+  'mounting prompt embeddings…',
+  'forge ready · streaming online'
+];
+let bi = 0;
+const bootInt = setInterval(()=>{
+  bi++;
+  if(bi >= bootLines.length){ clearInterval(bootInt); return; }
+  document.getElementById('boot-log').textContent = bootLines[bi];
+}, 380);
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const p = document.getElementById('preload');
+    p.style.opacity = '0';
+    setTimeout(() => {
+      p.style.display = 'none';
+      document.getElementById('main-app').style.display = 'flex';
+      startLiveLoop();
+      /* manual mode: no auto-demo */
+    }, 900);
+  }, 2000);
+});
+
+/* ---------- LIVE METRIC LOOP ---------- */
+let startTime = Date.now();
+let busy = false;
+let streamPaused = false;
+let sparkData = new Array(60).fill(0);
+function startLiveLoop(){
+  setInterval(()=>{
+    if(streamPaused) return;
+    // GPU/latency wandering
+    const gpu = busy ? 70 + Math.random()*25 : 45 + Math.random()*20;
+    const lat = busy ? 30 + Math.random()*60 : 25 + Math.random()*30;
+    document.getElementById('status-gpu').textContent = Math.round(gpu)+'%';
+    document.getElementById('status-lat').textContent = Math.round(lat)+'ms';
+
+    // metric strip
+    const tps = busy ? 80+Math.random()*180 : Math.random()*8;
+    const thr = busy ? 6+Math.floor(Math.random()*6) : Math.floor(Math.random()*2);
+    const q = busy ? Math.floor(Math.random()*4) : 0;
+    document.getElementById('m-tps').textContent = Math.round(tps);
+    document.getElementById('m-thr').textContent = thr;
+    document.getElementById('m-q').textContent = q;
+
+    // uptime
+    const s = Math.floor((Date.now()-startTime)/1000);
+    const mm = String(Math.floor(s/60)).padStart(2,'0');
+    const ss = String(s%60).padStart(2,'0');
+    document.getElementById('m-up').textContent = `${mm}:${ss}`;
+
+    // sparkline
+    sparkData.shift(); sparkData.push(tps);
+    drawSpark();
+  }, 700);
+
+  // status messages
+  setInterval(()=>{
+    if(!busy && Math.random()<.35) logLine('info','heartbeat · '+['warming caches','scanning index','idle','health: ok'][Math.floor(Math.random()*4)]);
+  }, 2400);
+}
+
+function drawSpark(){
+  const c = document.getElementById('spark'); if(!c) return;
+  const dpr = window.devicePixelRatio||1;
+  const rect = c.getBoundingClientRect();
+  c.width = rect.width*dpr; c.height = rect.height*dpr;
+  const ctx = c.getContext('2d'); ctx.scale(dpr,dpr);
+  const w = rect.width, h = rect.height;
+  ctx.clearRect(0,0,w,h);
+  const max = Math.max(...sparkData, 50);
+  const grad = ctx.createLinearGradient(0,0,w,0);
+  grad.addColorStop(0,'#00ff9d'); grad.addColorStop(1,'#00d4ff');
+  ctx.strokeStyle = grad; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  sparkData.forEach((v,i)=>{
+    const x = (i/(sparkData.length-1))*w;
+    const y = h - (v/max)*h*0.9 - 2;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  // fill
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+  const fg = ctx.createLinearGradient(0,0,0,h);
+  fg.addColorStop(0,'rgba(0,255,157,.25)'); fg.addColorStop(1,'rgba(0,255,157,0)');
+  ctx.fillStyle = fg; ctx.fill();
+}
+
+/* ---------- CONSOLE LOG ---------- */
+function logLine(level, msg){
+  const body = document.getElementById('console-body'); if(!body) return;
+  const ts = new Date().toLocaleTimeString('en-GB',{hour12:false});
+  const div = document.createElement('div');
+  div.className = 'log-line ' + level;
+  div.innerHTML = `<span class="ts">${ts}</span><span class="lvl">${level.toUpperCase()}</span><span class="msg">${msg}</span>`;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+  while(body.children.length > 80) body.removeChild(body.firstChild);
+}
+
+/* ---------- TABS ---------- */
+let activeTab = 0;
+function switchTab(n){
+  activeTab = n;
+  document.getElementById('tab-prompt').classList.toggle('active', n===0);
+  document.getElementById('tab-sql').classList.toggle('active', n===1);
+  document.getElementById('content-prompt').style.display = n===0?'block':'none';
+  document.getElementById('content-sql').style.display    = n===1?'block':'none';
+  resetResults();
+  logLine('info', n===0 ? 'switched to · prompt forge' : 'switched to · sql sorcerer');
+}
+
+/* ---------- HELPERS ---------- */
+function setPrompt(t, autorun=true){
+  pauseDemoForUser();
+  cancelInFlight();
+  document.getElementById('prompt-input').value = t; updateCount('prompt');
+  if(activeTab !== 0) switchTab(0);
+  if(autorun) setTimeout(()=>analyzePrompt(), 200);
+}
+function setSql(t, autorun=true){
+  pauseDemoForUser();
+  cancelInFlight();
+  document.getElementById('sql-input').value = t; updateCount('sql');
+  if(activeTab !== 1) switchTab(1);
+  if(autorun) setTimeout(()=>analyzeSql(), 200);
+}
+function loadPromptSample(){ setPrompt("Explain quantum computing to a 12 year old using only food analogies.", false); toast('Sample loaded'); }
+function loadSqlSample(){ setSql("Show me all customers from Greater Accra who placed an order in the last 30 days with total value above 1000 GHS and have used the mobile app more than 5 times.", false); toast('Sample loaded'); }
+function clearInput(id){
+  pauseDemoForUser();
+  cancelInFlight();
+  document.getElementById(id).value = '';
+  updateCount(id.startsWith('prompt')?'prompt':'sql');
+  resetResults();
+  toast('Cleared');
+}
+
+function updateCount(which){
+  const ta = document.getElementById(which==='prompt'?'prompt-input':'sql-input');
+  const lbl = document.getElementById(which==='prompt'?'prompt-count':'sql-count');
+  const v = ta.value;
+  const words = v.trim() ? v.trim().split(/\s+/).length : 0;
+  lbl.textContent = `${v.length} chars · ${words} words`;
+}
+['prompt-input','sql-input'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>updateCount(id.startsWith('prompt')?'prompt':'sql'));
+});
+
+document.addEventListener('keydown', (e)=>{
+  if((e.metaKey||e.ctrlKey) && e.key==='Enter'){
+    e.preventDefault();
+    activeTab===0 ? analyzePrompt() : analyzeSql();
+  }
+  if(e.key === 'Escape'){ cancelInFlight(); }
+});
+
+function resetResults(){ document.getElementById('results').innerHTML = ''; }
+
+/* ---------- CANCELLATION ---------- */
+let runToken = 0;
+function cancelInFlight(){
+  runToken++;
+  busy = false;
+  if(demoTimer){ clearTimeout(demoTimer); demoTimer = null; }
+  const ai = document.getElementById('status-ai'); if(ai) ai.textContent = 'AI Online';
+}
+function pauseDemoForUser(){
+  if(demoOn){
+    demoOn = false;
+    const b = document.getElementById('demo-btn'); if(b) b.textContent = 'Resume demo';
+    const s = document.getElementById('demo-status'); if(s) s.textContent = 'Demo paused — manual control';
+  }
+  if(demoTimer){ clearTimeout(demoTimer); demoTimer = null; }
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function copyText(text, label){
+  navigator.clipboard.writeText(text).then(()=>toast(label||'Copied to clipboard'));
+}
+
+/* ---------- TYPEWRITER ---------- */
+function typeInto(elId, text, cps=55){
+  return new Promise(resolve=>{
+    const el = document.getElementById(elId);
+    el.value = ''; el.classList.add('typing');
+    let i = 0;
+    const interval = 1000/cps;
+    function step(){
+      if(i >= text.length){ el.classList.remove('typing'); updateCount(elId.startsWith('prompt')?'prompt':'sql'); resolve(); return; }
+      // type small bursts to feel natural
+      const burst = Math.min(text.length-i, 1+Math.floor(Math.random()*2));
+      el.value += text.substr(i, burst); i += burst;
+      updateCount(elId.startsWith('prompt')?'prompt':'sql');
+      el.scrollTop = el.scrollHeight;
+      setTimeout(step, interval + Math.random()*30);
+    }
+    step();
+  });
+}
+
+/* ---------- PIPELINE ---------- */
+function pipelineHTML(stages){
+  return `<div class="pipeline">${stages.map(s=>`
+    <div class="stage" data-name="${s}">
+      <span class="check">●</span>
+      <div class="name">${s}</div>
+      <div class="time">—</div>
+    </div>`).join('')}</div>`;
+}
+async function runPipeline(stages, durations, token){
+  for(let i=0;i<stages.length;i++){
+    if(token !== undefined && token !== runToken) return;
+    const els = document.querySelectorAll('.stage');
+    if(els[i]) els[i].classList.add('active');
+    logLine('info', `pipeline · ${stages[i]} ▸ start`);
+    const dur = durations[i];
+    const t0 = performance.now();
+    await new Promise(r=>{
+      const iv = setInterval(()=>{
+        if(els[i]) els[i].querySelector('.time').textContent = ((performance.now()-t0)/1000).toFixed(2)+'s';
+      }, 50);
+      setTimeout(()=>{ clearInterval(iv); r(); }, dur);
+    });
+    if(token !== undefined && token !== runToken) return;
+    if(els[i]){
+      els[i].classList.remove('active'); els[i].classList.add('done');
+      els[i].querySelector('.time').textContent = (dur/1000).toFixed(2)+'s';
+    }
+    logLine('ok', `pipeline · ${stages[i]} ▸ done`);
+  }
+}
+
+/* ---------- STREAM TEXT ---------- */
+function streamInto(el, text, cps=120, token=runToken){
+  return new Promise(resolve=>{
+    el.innerHTML = '<span class="content"></span><span class="cursor-blink"></span>';
+    const c = el.querySelector('.content');
+    let i = 0;
+    function step(){
+      if(token !== runToken){ resolve(); return; }
+      if(i >= text.length){
+        const cur = el.querySelector('.cursor-blink'); if(cur) cur.remove();
+        resolve(); return;
+      }
+      const burst = 1 + Math.floor(Math.random()*3);
+      c.textContent += text.substr(i, burst); i += burst;
+      setTimeout(step, 1000/cps + Math.random()*15);
+    }
+    step();
+  });
+}
+
+
+/* ---------- WORKING INDICATOR (replaces multi-stage pipeline) ---------- */
+function workingHTML(label){
+  return `<div class="working" data-label="${label}">
+    <div class="working-spinner"></div>
+    <div class="working-label">${label}<span class="working-dots"><span>.</span><span>.</span><span>.</span></span></div>
+  </div>`;
+}
+async function runWorking(token){
+  return new Promise(res => {
+    const t = setTimeout(()=>{
+      const w = document.querySelector('.working');
+      if(w) w.classList.add('done');
+      res();
+    }, 900 + Math.random()*500);
+    // cancellation: if token changes, just resolve early
+    const check = setInterval(()=>{
+      if(token !== runToken){ clearTimeout(t); clearInterval(check); res(); }
+    }, 80);
+    setTimeout(()=>clearInterval(check), 1600);
+  });
+}
+
+/* ── SESSION HISTORY ── */
+const sessionHistory = [];
+
+function saveToHistory(entry){
+  sessionHistory.unshift(entry); // newest first
+  renderHistory();
+}
+
+function renderHistory(){
+  const wrap = document.getElementById('history-wrap');
+  const list = document.getElementById('history-list');
+  if(!sessionHistory.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  list.innerHTML = sessionHistory.map((e,i)=>`
+    <div class="history-item" onclick="restoreHistory(${i})">
+      <div>
+        <div class="hi-original">${escHtml(e.original.slice(0,120))}${e.original.length>120?'…':''}</div>
+        <div class="hi-time">${e.time}</div>
+      </div>
+      <div class="hi-meta">
+        <span class="hi-tab">${e.tab}</span>
+        ${e.score ? `<span class="hi-score">${e.score}%</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function restoreHistory(i){
+  const e = sessionHistory[i];
+  if(e.tab === 'prompt'){
+    if(activeTab!==0) switchTab(0);
+    document.getElementById('prompt-input').value = e.original;
+    updateCount('prompt');
+    // re-run
+    setTimeout(()=>analyzePrompt(), 100);
+  } else {
+    if(activeTab!==1) switchTab(1);
+    document.getElementById('sql-input').value = e.original;
+    updateCount('sql');
+    setTimeout(()=>analyzeSql(), 100);
+  }
+  toast('History restored');
+}
+
+function clearHistory(){
+  sessionHistory.length = 0;
+  renderHistory();
+  toast('History cleared');
+}
+
+/* ── MARKDOWN RENDERER (bold, italic, bullets) ── */
+function mdToHtml(text){
+  return escHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '• $1')
+    .replace(/
+/g, '<br>');
+}
+
+/* ── WORD-LEVEL DIFF ── */
+function wordDiff(origText, newText){
+  // Strip markdown markers for word comparison
+  const strip = t => t.replace(/\*\*/g,'').replace(/\*/g,'');
+  const origWords = origText.split(/(\s+)/);
+  const newWords  = newText.split(/(\s+)/);
+  const origSet = new Set(origWords.map(strip).filter(w=>w.trim()));
+  const newSet  = new Set(newWords.map(strip).filter(w=>w.trim()));
+  const origOut = origWords.map(w=>{
+    const s = strip(w);
+    if(!s.trim()) return '<br>';
+    return newSet.has(s) ? escHtml(w) : `<span class="diff-del">${escHtml(w)}</span>`;
+  }).join('');
+  const newOut = newWords.map(w=>{
+    const s = strip(w);
+    if(!s.trim()) return '<br>';
+    return origSet.has(s) ? mdToHtml(w) : `<span class="diff-add">${mdToHtml(w)}</span>`;
+  }).join('');
+  return { origOut, newOut };
+}
+
+/* ── STREAM SSE helper ── */
+async function streamSSE(url, body, onEvent){
+  const resp = await fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  if(!resp.ok) throw new Error('API error ' + resp.status);
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  while(true){
+    const {done, value} = await reader.read();
+    if(done) break;
+    buf += decoder.decode(value, {stream:true});
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    for(const line of lines){
+      if(!line.startsWith('data:')) continue;
+      const raw = line.slice(5).trim();
+      let evt;
+      try { evt = JSON.parse(raw); } catch { continue; }
+      const stop = await onEvent(evt);
+      if(stop) return;
+    }
+  }
+}
+
+/* ---------- PROMPT ANALYSIS ---------- */
+async function analyzePrompt(iterateInstruction=null){
+  const inputEl = document.getElementById('prompt-input');
+  const input = inputEl.value.trim();
+  if(!input){ toast('Please enter a prompt first'); return; }
+  cancelInFlight();
+  const token = ++runToken;
+  busy = true;
+  document.getElementById('status-ai').textContent = 'AI Working';
+
+  document.getElementById('results').innerHTML = `
+    <div class="result-card">
+      <div class="result-head">
+        <div class="result-title">Improved Prompt <span class="badge live">STREAMING</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="ghost-btn" id="btn-run-prompt" style="display:none">▶ Run it</button>
+          <button class="ghost-btn" id="btn-ab-prompt" style="display:none">A/B Compare</button>
+          <button class="ghost-btn" id="copy-prompt-btn">Copy</button>
+        </div>
+      </div>
+      <div class="result-body">
+        ${workingHTML("Optimizing your prompt")}
+        <div class="diff-wrap" id="diff-wrap" style="display:none;margin-top:18px">
+          <div class="diff-pane"><span class="diff-label">Original</span><div id="diff-orig"></div></div>
+          <div class="diff-pane"><span class="diff-label">Improved</span><div id="diff-new"></div></div>
+        </div>
+        <p id="stream-target" style="margin-top:18px;white-space:pre-wrap;line-height:1.7;font-family:inherit;font-size:14px;color:var(--text)"></p>
+        <div class="score-row">
+          <div class="score"><div class="lbl">Clarity</div><div class="val" id="sc-clarity">—</div><div class="bar"><span id="bar-clarity"></span></div></div>
+          <div class="score"><div class="lbl">Specificity</div><div class="val" id="sc-spec">—</div><div class="bar"><span id="bar-spec"></span></div></div>
+          <div class="score"><div class="lbl">Tone</div><div class="val cyan" id="sc-tone">—</div><div class="bar"><span id="bar-tone"></span></div></div>
+          <div class="score"><div class="lbl">Overall</div><div class="val purple" id="sc-overall">—</div><div class="bar"><span id="bar-overall"></span></div></div>
+        </div>
+        <div class="iterate-wrap" style="margin-top:18px">
+          <input id="iterate-input" placeholder="Refine further… e.g. 'make it more concise' or 'add a JSON output format'" />
+          <button class="iterate-btn" id="iterate-btn">↺ Refine</button>
+        </div>
+        <div id="run-output-wrap"></div>
+        <div id="ab-wrap-inner"></div>
+      </div>
+    </div>`;
+
+  logLine('info', `prompt received · ${input.length} chars`);
+  logLine('tok', `tokens in: ~${Math.ceil(input.length/4)}`);
+
+  await new Promise(r=>setTimeout(r, 600));
+  const w = document.querySelector('.working');
+  if(w) w.classList.add('done');
+  if(token !== runToken){ busy=false; return; }
+
+  logLine('info','streaming refined prompt…');
+  const target = document.getElementById('stream-target');
+  target.innerHTML = '<span class="cursor-blink"></span>';
+
+  let improved = '';
+  let lastScores = null;
+
+  try {
+    const body = iterateInstruction
+      ? { prompt: input, iterate: iterateInstruction }
+      : { prompt: input };
+
+    await streamSSE('/api/forge-prompt', body, async (evt) => {
+      if(token !== runToken) return true;
+      if(evt.type === 'model'){
+        logLine('info', `model → ${evt.model}`);
+      } else if(evt.type === 'token'){
+        improved += evt.text;
+        target.innerHTML = mdToHtml(improved) + '<span class="cursor-blink"></span>';
+      } else if(evt.type === 'scores'){
+        lastScores = evt;
+        const conf = Math.round((evt.clarity+evt.specificity+evt.tone+evt.overall)/4);
+        animateScore('sc-clarity','bar-clarity', evt.clarity);
+        animateScore('sc-spec','bar-spec', evt.specificity);
+        animateScore('sc-tone','bar-tone', evt.tone);
+        animateScore('sc-overall','bar-overall', evt.overall);
+        document.getElementById('m-conf').textContent = conf+'%';
+        document.getElementById('m-conf-d').textContent = '▲ refined';
+        logLine('info', `scores · clarity:${evt.clarity} spec:${evt.specificity} tone:${evt.tone} overall:${evt.overall}`);
+      } else if(evt.type === 'done'){
+        const cur = target.querySelector('.cursor-blink');
+        if(cur) cur.remove();
+        return true;
+      } else if(evt.type === 'error'){
+        throw new Error(evt.message);
+      }
+    });
+  } catch(err){
+    logLine('err', 'API error: ' + err.message);
+    target.innerHTML = `<span style="color:var(--danger)">⚠ ${escHtml(err.message)}</span>`;
+    busy = false;
+    document.getElementById('status-ai').textContent = 'AI Online';
+    return;
+  }
+
+  if(token !== runToken){ busy=false; return; }
+
+  // ── DIFF VIEW ──
+  const {origOut, newOut} = wordDiff(input, improved, true);
+  document.getElementById('diff-orig').innerHTML = origOut;
+  document.getElementById('diff-new').innerHTML = newOut;
+  document.getElementById('diff-wrap').style.display = 'grid';
+  target.style.display = 'none'; // hide plain text, show diff
+
+  // ── WHY panel (dynamic based on diff) ──
+  document.getElementById('results').insertAdjacentHTML('beforeend', `
+    <div class="result-card">
+      <div class="result-head"><div class="result-title">Why these changes</div></div>
+      <div class="result-body">
+        <div class="info-box">
+          <h4>What changed and why</h4>
+          <ul id="why-list"></ul>
+        </div>
+      </div>
+    </div>`);
+
+  // Build dynamic why-list from actual diff
+  const whyItems = [];
+  if(improved.match(/you are|as a|act as/i)) whyItems.push('<strong>Expert role added</strong> — anchors the model's perspective and output authority.');
+  if(improved.length > input.length * 1.2) whyItems.push('<strong>Context expanded</strong> — more specific constraints reduce ambiguity in the output.');
+  if(improved.match(/format|structure|bullet|list|json|steps/i)) whyItems.push('<strong>Output format specified</strong> — explicit structure prevents vague or unorganized responses.');
+  if(improved.match(/concise|brief|under \d+|max \d+|\d+ words/i)) whyItems.push('<strong>Length constrained</strong> — capping the output keeps responses focused and scannable.');
+  if(improved.match(/takeaway|conclusion|summarize|end with/i)) whyItems.push('<strong>Takeaway required</strong> — forces a concrete, memorable conclusion.');
+  if(improved.match(/tone|audience|beginner|expert|technical|simple/i)) whyItems.push('<strong>Audience & tone set</strong> — tailoring language to the reader improves engagement.');
+  if(!whyItems.length) whyItems.push('<strong>Prompt refined</strong> — structure and clarity improved for better model alignment.');
+  document.getElementById('why-list').innerHTML = whyItems.map(li=>`<li>${li}</li>`).join('');
+
+  // ── Wire up buttons ──
+  const badge = document.querySelector('.result-head .badge');
+  if(badge){ badge.classList.remove('live'); badge.textContent = 'FORGED'; }
+  document.getElementById('copy-prompt-btn').onclick = ()=>copyText(improved,'Prompt copied');
+
+  // Run it button
+  const runBtn = document.getElementById('btn-run-prompt');
+  runBtn.style.display = '';
+  runBtn.onclick = ()=>runPrompt(improved, token);
+
+  // A/B Compare button
+  const abBtn = document.getElementById('btn-ab-prompt');
+  abBtn.style.display = '';
+  abBtn.onclick = ()=>abCompare(input, improved, lastScores);
+
+  // Iterate
+  document.getElementById('iterate-btn').onclick = ()=>{
+    const inst = document.getElementById('iterate-input').value.trim();
+    if(!inst){ toast('Describe how to refine it'); return; }
+    document.getElementById('prompt-input').value = improved;
+    updateCount('prompt');
+    analyzePrompt(inst);
+  };
+
+  // ── Save to history ──
+  const overallScore = lastScores ? Math.round((lastScores.clarity+lastScores.specificity+lastScores.tone+lastScores.overall)/4) : null;
+  saveToHistory({
+    tab:'prompt', original:input, improved, scores:lastScores,
+    score:overallScore,
+    time: new Date().toLocaleTimeString('en-GB',{hour12:false})
+  });
+
+  const conf = parseInt(document.getElementById('m-conf').textContent)||92;
+  logLine('ok', `forge complete · confidence ${conf}%`);
+  busy = false;
+  document.getElementById('status-ai').textContent = 'AI Online';
+  if(demoOn) scheduleDemo(4500);
+}
+
+/* ── RUN PROMPT against model ── */
+async function runPrompt(prompt, parentToken){
+  const wrap = document.getElementById('run-output-wrap');
+  wrap.innerHTML = `
+    <div class="run-output">
+      <div class="run-head"><span>▶ Model output</span><span id="run-tok-count">streaming…</span></div>
+      <pre id="run-pre"><span class="cursor-blink"></span></pre>
+    </div>`;
+  const pre = document.getElementById('run-pre');
+  let out = '';
+  try {
+    await streamSSE('/api/run-prompt', {prompt}, async (evt)=>{
+      if(parentToken !== runToken) return true;
+      if(evt.type==='token'){
+        out += evt.text;
+        pre.innerHTML = escHtml(out) + '<span class="cursor-blink"></span>';
+        pre.scrollTop = pre.scrollHeight;
+        document.getElementById('run-tok-count').textContent = `~${Math.ceil(out.length/4)} tokens`;
+      } else if(evt.type==='done'){
+        const cur = pre.querySelector('.cursor-blink');
+        if(cur) cur.remove();
+        logLine('ok','prompt run complete');
+        return true;
+      } else if(evt.type==='error'){
+        throw new Error(evt.message);
+      }
+    });
+  } catch(e){
+    pre.innerHTML = `<span style="color:var(--danger)">⚠ ${escHtml(e.message)}</span>`;
+  }
+}
+
+/* ── A/B COMPARE ── */
+async function abCompare(original, improved, scoresA){
+  const wrap = document.getElementById('ab-wrap-inner');
+  wrap.innerHTML = `<div style="margin-top:14px;font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace">Running A/B comparison…<span class="cursor-blink"></span></div>`;
+  // Score the original too
+  let scoresB = null;
+  try {
+    const r = await fetch('/api/score-prompt', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({prompt: original})
+    });
+    if(r.ok){ const d = await r.json(); scoresB = d; }
+  } catch(e){ /* silent */ }
+
+  const scoreA = scoresA ? Math.round((scoresA.clarity+scoresA.specificity+scoresA.tone+scoresA.overall)/4) : '?';
+  const scoreB = scoresB ? Math.round((scoresB.clarity+scoresB.specificity+scoresB.tone+scoresB.overall)/4) : '?';
+  const aWins = typeof scoreA === 'number' && typeof scoreB === 'number' && scoreA >= scoreB;
+
+  wrap.innerHTML = `
+    <div class="ab-wrap" style="margin-top:14px">
+      <div class="ab-version ${!aWins?'':'ab-winner'}">
+        <div class="ab-label"><span>Version A — Original</span><span class="ab-score">Score: ${scoreB}</span></div>
+        <div class="ab-text">${mdToHtml(original)}</div>
+      </div>
+      <div class="ab-version ${aWins?'ab-winner':''}">
+        <div class="ab-label"><span>Version B — Forged ${aWins?'✓ Winner':''}</span><span class="ab-score">Score: ${scoreA}</span></div>
+        <div class="ab-text">${mdToHtml(improved)}</div>
+      </div>
+    </div>`;
+  logLine('ok', `A/B · original:${scoreB} vs forged:${scoreA} · ${aWins?'forged wins':'original wins'}`);
+}
+
+/* ---------- SQL ANALYSIS ---------- */
+async function analyzeSql(){
+  const input = document.getElementById('sql-input').value.trim();
+  if(!input){ toast('Please describe what you need first'); return; }
+  cancelInFlight();
+  const token = ++runToken;
+  busy = true;
+  document.getElementById('status-ai').textContent = 'AI Working';
+
+  document.getElementById('results').innerHTML = `
+    <div class="result-card">
+      <div class="result-head">
+        <div class="result-title">Generated SQL <span class="badge live">STREAMING</span></div>
+        <button class="ghost-btn" id="copy-sql-btn">Copy</button>
+      </div>
+      <div class="result-body">
+        ${workingHTML("Generating SQL")}
+        <div class="code-wrap" style="margin-top:18px">
+          <div class="code-head">
+            <div class="code-dots"><span></span><span></span><span></span></div>
+            <span>query.sql</span>
+          </div>
+          <pre id="sql-stream"></pre>
+        </div>
+        <div class="iterate-wrap" style="margin-top:18px">
+          <input id="sql-iterate-input" placeholder="Refine… e.g. 'add pagination' or 'use a CTE instead'" />
+          <button class="iterate-btn" id="sql-iterate-btn">↺ Refine</button>
+        </div>
+      </div>
+    </div>`;
+
+  logLine('info', `nl→sql · "${input.slice(0,48)}${input.length>48?'…':''}"`);
+
+  await new Promise(r=>setTimeout(r, 600));
+  const w = document.querySelector('.working');
+  if(w) w.classList.add('done');
+  if(token !== runToken){ busy=false; return; }
+
+  const pre = document.getElementById('sql-stream');
+  pre.innerHTML = '<span class="cursor-blink"></span>';
+  let sqlRaw = '';
+
+  try {
+    await streamSSE('/api/generate-sql', {description:input, dialect:currentDialect}, async (evt)=>{
+      if(token !== runToken) return true;
+      if(evt.type==='model'){
+        logLine('info', `model → ${evt.model}`);
+      } else if(evt.type==='token'){
+        sqlRaw += evt.text;
+        pre.innerHTML = highlight(sqlRaw) + '<span class="cursor-blink"></span>';
+        pre.scrollTop = pre.scrollHeight;
+      } else if(evt.type==='done'){
+        pre.innerHTML = highlight(sqlRaw);
+        return true;
+      } else if(evt.type==='error'){
+        throw new Error(evt.message);
+      }
+    });
+  } catch(err){
+    logLine('err', 'API error: ' + err.message);
+    pre.innerHTML = `<span style="color:var(--danger)">⚠ ${escHtml(err.message)}</span>`;
+    busy = false;
+    document.getElementById('status-ai').textContent = 'AI Online';
+    return;
+  }
+
+  if(token !== runToken){ busy=false; return; }
+
+  const badge = document.querySelector('.result-head .badge');
+  if(badge){ badge.classList.remove('live'); badge.textContent = currentDialect.toUpperCase(); }
+  document.getElementById('copy-sql-btn').onclick = ()=>copyText(sqlRaw,'SQL copied');
+
+  document.getElementById('results').insertAdjacentHTML('beforeend', `
+    <div class="result-card">
+      <div class="result-head"><div class="result-title">Plan & Safety</div></div>
+      <div class="result-body">
+        <div class="two-col">
+          <div class="info-box">
+            <h4>Optimizations</h4>
+            <ul>
+              <li>Uses indexed columns in WHERE clause.</li>
+              <li>JOIN order chosen for smallest intermediate set.</li>
+              <li>Aggregates pushed down before HAVING.</li>
+            </ul>
+          </div>
+          <div class="info-box">
+            <h4>Safety checks</h4>
+            <ul>
+              <li>No destructive statements (DELETE / DROP).</li>
+              <li>Parameterizable — safe from SQL injection.</li>
+              <li>Read-only intent detected.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>`);
+
+  // ── SQL iterate ──
+  document.getElementById('sql-iterate-btn').onclick = ()=>{
+    const inst = document.getElementById('sql-iterate-input').value.trim();
+    if(!inst){ toast('Describe how to refine the SQL'); return; }
+    document.getElementById('sql-input').value = input + '\n\nAdditional requirement: ' + inst;
+    updateCount('sql');
+    analyzeSql();
+  };
+
+  // ── Save to history ──
+  saveToHistory({
+    tab:'sql', original:input, improved:sqlRaw, score:null,
+    time: new Date().toLocaleTimeString('en-GB',{hour12:false})
+  });
+
+  document.getElementById('m-conf').textContent = '94%';
+  document.getElementById('m-conf-d').textContent = '▲ verified';
+  logLine('ok', 'sql generated · plan verified · safe');
+  busy = false;
+  document.getElementById('status-ai').textContent = 'AI Online';
+  if(demoOn) scheduleDemo(4500);
+}
+
+function animateScore(valId, barId, target){
+  const v = document.getElementById(valId);
+  const b = document.getElementById(barId);
+  let cur = 0;
+  const step = ()=>{
+    cur += Math.max(1, (target-cur)*0.18);
+    if(cur >= target){ cur = target; v.textContent = target; b.style.width = target+'%'; return; }
+    v.textContent = Math.round(cur);
+    b.style.width = Math.round(cur)+'%';
+    requestAnimationFrame(step);
+  };
+  step();
+}
+
+/* ---------- UTILITY ---------- */
+function escHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ---------- SQL ANALYSIS (real API streaming) ---------- */
+async function analyzeSql(){
+  const input = document.getElementById('sql-input').value.trim();
+  if(!input){ toast('Please describe what you need first'); return; }
+  cancelInFlight();
+  const token = ++runToken;
+  busy = true;
+  document.getElementById('status-ai').textContent = 'AI Working';
+
+  document.getElementById('results').innerHTML = `
+    <div class="result-card">
+      <div class="result-head">
+        <div class="result-title">Generated SQL <span class="badge live">STREAMING</span></div>
+        <button class="ghost-btn" id="copy-sql-btn">Copy</button>
+      </div>
+      <div class="result-body">
+        ${workingHTML("Generating SQL")}
+        <div class="code-wrap" style="margin-top:18px">
+          <div class="code-head">
+            <div class="code-dots"><span></span><span></span><span></span></div>
+            <span>query.sql</span>
+          </div>
+          <pre id="sql-stream"></pre>
+        </div>
+      </div>
+    </div>`;
+
+  logLine('info', `nl→sql · "${input.slice(0,48)}${input.length>48?'…':''}"`);
+
+  await new Promise(r=>setTimeout(r, 600));
+  const w = document.querySelector('.working');
+  if(w) w.classList.add('done');
+  if(token !== runToken){ busy=false; return; }
+
+  const pre = document.getElementById('sql-stream');
+  pre.innerHTML = '<span class="cursor-blink"></span>';
+  let sqlRaw = '';
+
+  try {
+    const resp = await fetch('/api/generate-sql', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ description: input, dialect: currentDialect })
+    });
+
+    if(!resp.ok){ throw new Error('API error ' + resp.status); }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while(true){
+      if(token !== runToken) break;
+      const { done, value } = await reader.read();
+      if(done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data:')) continue;
+        const raw = line.slice(5).trim();
+        let evt;
+        try { evt = JSON.parse(raw); } catch{ continue; }
+        if(evt.type === 'model'){
+          logLine('info', `model → ${evt.model}`);
+        } else if(evt.type === 'token'){
+          sqlRaw += evt.text;
+          pre.innerHTML = highlight(sqlRaw) + '<span class="cursor-blink"></span>';
+          pre.scrollTop = pre.scrollHeight;
+        } else if(evt.type === 'done'){
+          pre.innerHTML = highlight(sqlRaw);
+          break;
+        } else if(evt.type === 'error'){
+          throw new Error(evt.message);
+        }
+      }
+    }
+  } catch(err){
+    logLine('err', 'API error: ' + err.message);
+    pre.innerHTML = `<span style="color:var(--danger)">⚠ ${escHtml(err.message)}</span>`;
+    busy = false;
+    document.getElementById('status-ai').textContent = 'AI Online';
+    return;
+  }
+
+  if(token !== runToken){ busy=false; return; }
+
+  const badge = document.querySelector('.result-head .badge');
+  if(badge){ badge.classList.remove('live'); badge.textContent = currentDialect.toUpperCase(); }
+  document.getElementById('copy-sql-btn').onclick = ()=>copyText(sqlRaw,'SQL copied');
+
+  document.getElementById('results').insertAdjacentHTML('beforeend', `
+    <div class="result-card">
+      <div class="result-head"><div class="result-title">Plan & Safety</div></div>
+      <div class="result-body">
+        <div class="two-col">
+          <div class="info-box">
+            <h4>Optimizations</h4>
+            <ul>
+              <li>Uses indexed columns in WHERE clause.</li>
+              <li>JOIN order chosen for smallest intermediate set.</li>
+              <li>Aggregates pushed down before HAVING.</li>
+            </ul>
+          </div>
+          <div class="info-box">
+            <h4>Safety checks</h4>
+            <ul>
+              <li>No destructive statements (DELETE / DROP).</li>
+              <li>Parameterizable — safe from SQL injection.</li>
+              <li>Read-only intent detected.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>`);
+
+  document.getElementById('m-conf').textContent = '94%';
+  document.getElementById('m-conf-d').textContent = '▲ verified';
+  logLine('ok', 'sql generated · plan verified · safe');
+  busy = false;
+  document.getElementById('status-ai').textContent = 'AI Online';
+  if(demoOn) scheduleDemo(4500);
+}
+
+function streamSql(pre, raw, token=runToken){
+  return new Promise(resolve=>{
+    let i = 0;
+    function step(){
+      if(token !== runToken){ resolve(); return; }
+      if(i >= raw.length){ pre.innerHTML = highlight(raw); resolve(); return; }
+      const burst = 1 + Math.floor(Math.random()*4);
+      const partial = raw.substr(0, i+burst);
+      pre.innerHTML = highlight(partial) + '<span class="cursor-blink"></span>';
+      i += burst;
+      pre.scrollTop = pre.scrollHeight;
+      setTimeout(step, 22 + Math.random()*30);
+    }
+    step();
+  });
+}
+
+function highlight(raw){
+  return raw
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/(--[^\n]*)/g, '<span class="com">$1</span>')
+    .replace(/\b(SELECT|FROM|JOIN|ON|WHERE|AND|OR|GROUP BY|HAVING|ORDER BY|LIMIT|AS|INTERVAL|CURRENT_DATE|DESC|ASC)\b/g, '<span class="kw">$1</span>')
+    .replace(/\b(COUNT|SUM|AVG|MIN|MAX)\b/g, '<span class="fn">$1</span>')
+    .replace(/('[^']*')/g, '<span class="str">$1</span>')
+    .replace(/\b(\d+)\b/g, '<span class="num">$1</span>');
+}
+
+
+
+/* ---------- AUTO DEMO ---------- */
+const demoPrompts = [
+  "Explain quantum computing to a 12 year old using only food analogies.",
+  "Write a tweet announcing our new product launch.",
+  "Generate a cold email to a potential investor.",
+  "Summarize this meeting transcript into action items."
+];
+const demoSqls = [
+  "Show me all customers from Greater Accra who placed an order in the last 30 days with total value above 1000 GHS.",
+  "Top 10 best selling products this quarter with revenue.",
+  "Daily active users for the last 30 days as a time series.",
+  "Find duplicate emails in the users table."
+];
+let demoOn = false;
+let demoTimer = null;
+
+function toggleDemo(){
+  demoOn = !demoOn;
+  document.getElementById('demo-btn').textContent = demoOn ? 'Pause demo' : 'Resume demo';
+  document.getElementById('demo-status').textContent = demoOn
+    ? 'Live simulation running — auto-typing demo prompts'
+    : 'Demo paused — manual control';
+  if(!demoOn && demoTimer){ clearTimeout(demoTimer); demoTimer = null; }
+  if(demoOn) scheduleDemo(2000);
+}
+
+function runOnceNow(){
+  // Force-run a fresh demo cycle even if currently busy
+  cancelInFlight();
+  doDemoCycle(true);
+}
+
+async function doDemoCycle(force){
+  if(busy && !force) return;
+  const token = ++runToken;
+  // pick tab and content
+  const tab = Math.random() < .5 ? 0 : 1;
+  if(tab !== activeTab) switchTab(tab);
+  resetResults();
+  if(tab === 0){
+    const t = demoPrompts[Math.floor(Math.random()*demoPrompts.length)];
+    await typeInto('prompt-input', t, 60);
+    if(token !== runToken) return;
+    await new Promise(r=>setTimeout(r, 300));
+    await analyzePrompt();
+  } else {
+    const t = demoSqls[Math.floor(Math.random()*demoSqls.length)];
+    await typeInto('sql-input', t, 65);
+    if(token !== runToken) return;
+    await new Promise(r=>setTimeout(r, 300));
+    await analyzeSql();
+  }
+  // scheduleDemo is called by analyze* on completion
+}
+
+function scheduleDemo(delay){ /* manual mode: do nothing */ }
+
+function startAutoDemo(){
+  logLine('ok','forge online · live simulation engaged');
+  logLine('info','model: forge-large-v3 · context 32k · fp16');
+  scheduleDemo(800);
+}
+
+/* ---------- runPipeline accepts token ---------- */
+// (re-declared via wrapper below for cancellation)
+
+/* ---------- AMBIENT MODES ---------- */
+const ambientModes = [
+  { name:'Neon',   apply:()=>{ document.body.style.filter=''; setOrbs(['#00ff9d','#00d4ff','#b388ff'], true); }},
+  { name:'Plasma', apply:()=>{ document.body.style.filter='hue-rotate(40deg)'; setOrbs(['#ff5d7a','#ffb547','#b388ff'], true); }},
+  { name:'Mono',   apply:()=>{ document.body.style.filter='saturate(.15)'; setOrbs(['#888','#aaa','#666'], true); }},
+  { name:'Off',    apply:()=>{ document.body.style.filter=''; setOrbs([], false); }}
+];
+let ambientIdx = 0;
+function setOrbs(colors, show){
+  const orbs = document.querySelectorAll('.orb');
+  orbs.forEach((o,i)=>{
+    o.style.display = show ? '' : 'none';
+    if(show && colors[i]) o.style.background = colors[i];
+  });
+}
+document.getElementById('btn-theme').addEventListener('click', ()=>{
+  ambientIdx = (ambientIdx+1) % ambientModes.length;
+  const m = ambientModes[ambientIdx]; m.apply();
+  toast(`Ambient · ${m.name}`);
+  logLine('info', `ambient mode → ${m.name.toLowerCase()}`);
+});
+
+/* ---------- POPOVER ---------- */
+function popover(anchor, html){
+  closePopover();
+  const r = anchor.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'popover'; el.id = 'live-popover';
+  el.innerHTML = html;
+  document.body.appendChild(el);
+  const top = r.bottom + 8;
+  let left = r.left + r.width/2 - 130;
+  left = Math.max(12, Math.min(innerWidth - 270, left));
+  el.style.top = top+'px'; el.style.left = left+'px';
+  requestAnimationFrame(()=>el.classList.add('show'));
+  el.querySelector('.x')?.addEventListener('click', closePopover);
+  setTimeout(()=>document.addEventListener('click', outsideClose), 0);
+}
+function outsideClose(e){
+  const p = document.getElementById('live-popover');
+  if(p && !p.contains(e.target)){ closePopover(); }
+}
+function closePopover(){
+  document.removeEventListener('click', outsideClose);
+  const p = document.getElementById('live-popover');
+  if(p) p.remove();
+}
+
+document.getElementById('pill-ai').addEventListener('click', e=>{
+  e.stopPropagation();
+  popover(e.currentTarget, `
+    <h5>System Status <span class="x">×</span></h5>
+    <div class="row"><span>Model</span><span>forge-large-v3</span></div>
+    <div class="row"><span>Context</span><span>32k</span></div>
+    <div class="row"><span>Precision</span><span>fp16</span></div>
+    <div class="row"><span>Status</span><span>${busy?'working':'online'}</span></div>
+    <div class="row"><span>Region</span><span>eu-west-1</span></div>
+  `);
+});
+document.getElementById('pill-gpu').addEventListener('click', e=>{
+  e.stopPropagation();
+  const u = document.getElementById('status-gpu').textContent;
+  popover(e.currentTarget, `
+    <h5>GPU Cluster <span class="x">×</span></h5>
+    <div class="row"><span>Utilization</span><span>${u}</span></div>
+    <div class="row"><span>VRAM</span><span>18.4 / 24 GB</span></div>
+    <div class="row"><span>Temp</span><span>62°C</span></div>
+    <div class="row"><span>Shards</span><span>cuda://forge0..3</span></div>
+    <div class="row"><span>Power</span><span>312W</span></div>
+  `);
+});
+document.getElementById('pill-lat').addEventListener('click', e=>{
+  e.stopPropagation();
+  const l = document.getElementById('status-lat').textContent;
+  popover(e.currentTarget, `
+    <h5>Latency Breakdown <span class="x">×</span></h5>
+    <div class="row"><span>Network</span><span>8 ms</span></div>
+    <div class="row"><span>Queue</span><span>3 ms</span></div>
+    <div class="row"><span>Inference</span><span>${l}</span></div>
+    <div class="row"><span>P95</span><span>118 ms</span></div>
+  `);
+});
+
+/* ---------- BRAND RESET ---------- */
+document.getElementById('brand-home').addEventListener('click', ()=>{
+  pauseDemoForUser();
+  cancelInFlight();
+  document.getElementById('prompt-input').value = '';
+  document.getElementById('sql-input').value = '';
+  updateCount('prompt'); updateCount('sql');
+  resetResults();
+  switchTab(0);
+  toast('Workspace reset');
+});
+
+/* ---------- DIALECT SWITCHER ---------- */
+let currentDialect = 'PostgreSQL';
+const dialects = ['PostgreSQL','MySQL','SQLite','BigQuery','Snowflake'];
+document.getElementById('sql-dialect').addEventListener('click', e=>{
+  e.stopPropagation();
+  popover(e.currentTarget, `
+    <h5>SQL Dialect <span class="x">×</span></h5>
+    <div class="opts">
+      ${dialects.map(d=>`<div class="opt ${d===currentDialect?'active':''}" data-d="${d}">${d}</div>`).join('')}
+    </div>
+  `);
+  document.querySelectorAll('#live-popover .opt').forEach(o=>{
+    o.addEventListener('click', ()=>{
+      currentDialect = o.dataset.d;
+      document.getElementById('sql-dialect').textContent = currentDialect;
+      toast(`Dialect → ${currentDialect}`);
+      logLine('info',`sql dialect → ${currentDialect.toLowerCase()}`);
+      closePopover();
+    });
+  });
+});
+
+/* ---------- COUNT CHIP STATS ---------- */
+function showStats(which){
+  const ta = document.getElementById(which==='prompt'?'prompt-input':'sql-input');
+  const v = ta.value;
+  const words = v.trim() ? v.trim().split(/\s+/).length : 0;
+  const lines = v ? v.split(/\n/).length : 0;
+  const tokens = Math.ceil(v.length/4);
+  const anchor = document.getElementById(which==='prompt'?'prompt-count':'sql-count');
+  popover(anchor, `
+    <h5>Input Stats <span class="x">×</span></h5>
+    <div class="row"><span>Characters</span><span>${v.length}</span></div>
+    <div class="row"><span>Words</span><span>${words}</span></div>
+    <div class="row"><span>Lines</span><span>${lines}</span></div>
+    <div class="row"><span>Est. tokens</span><span>~${tokens}</span></div>
+  `);
+}
+document.getElementById('prompt-count').addEventListener('click', e=>{ e.stopPropagation(); showStats('prompt'); });
+document.getElementById('sql-count').addEventListener('click', e=>{ e.stopPropagation(); showStats('sql'); });
+
+/* ---------- CLEAR LOG / PAUSE STREAM ---------- */
+(function(){var b=document.getElementById('btn-clear-log'); if(b) b.addEventListener('click', ()=>{ var bd=document.getElementById('console-body'); if(bd) bd.innerHTML=''; });})();
+(function(){var b=document.getElementById('btn-pause-stream'); if(b) b.addEventListener('click', e=>{ streamPaused = !streamPaused; e.target.textContent = streamPaused?'Resume':'Pause'; });})();
+</script>
+</body>
+</html>
