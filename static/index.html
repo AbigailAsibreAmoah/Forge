@@ -1058,6 +1058,25 @@ window.addEventListener('load', () => {
       document.getElementById('main-app').style.display = 'flex';
       startLiveLoop();
       /* manual mode: no auto-demo */
+
+      // ── Init auth after preloader ──
+      const tok = getAuthToken();
+      const email = localStorage.getItem('forge_user_email');
+      if(tok && email){
+        _updateUserChip(email, null);
+        _origFetch('/api/auth/me', { headers: authHeaders() })
+          .then(r=>{ if(r.ok) return r.json(); throw new Error(); })
+          .then(u=>{ _updateUserChip(u.email, u.tier); })
+          .catch(()=>{
+            localStorage.removeItem('forge_token');
+            localStorage.removeItem('forge_user_email');
+            _updateUserChip(null, null);
+            showAuthModal('login');
+          });
+      } else {
+        showAuthModal('login');
+      }
+
     }, 900);
   }, 2000);
 });
@@ -2257,26 +2276,7 @@ document.addEventListener('keydown', e=>{
   }
 });
 
-// Init auth state on load
-(function initAuth(){
-  const tok = getAuthToken();
-  const email = localStorage.getItem('forge_user_email');
-  if(tok && email){
-    _updateUserChip(email, null);
-    // Verify token is still valid
-    _origFetch('/api/auth/me', { headers: authHeaders() })
-      .then(r=>{ if(r.ok) return r.json(); throw new Error(); })
-      .then(u=>{ _updateUserChip(u.email, u.tier); })
-      .catch(()=>{
-        localStorage.removeItem('forge_token');
-        localStorage.removeItem('forge_user_email');
-        _updateUserChip(null, null);
-        showAuthModal('login');
-      });
-  } else {
-    showAuthModal('login');
-  }
-})();
+// Auth initialised inside the preloader dismiss callback above
 
 </script>
 
