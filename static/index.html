@@ -196,7 +196,126 @@
 
   .console-head .ghost-btn{padding:4px 9px; font-size:11px}
   .spark .ghost-btn{padding:4px 9px; font-size:10px; margin-left:auto}
-  @keyframes pulse{50%{opacity:.4}}
+  /* ── Conversation Panel ── */
+  .conv-trigger-btn{
+    position:fixed; bottom:28px; right:28px; z-index:500;
+    background:linear-gradient(135deg,#00ff9d,#00d4ff);
+    color:#001a10; border:none; border-radius:999px;
+    padding:10px 18px; font-size:12px; font-weight:700;
+    display:flex; align-items:center; gap:7px; cursor:pointer;
+    box-shadow:0 8px 28px rgba(0,255,157,.35);
+    transition:transform .15s, box-shadow .2s;
+  }
+  .conv-trigger-btn:hover{transform:translateY(-2px); box-shadow:0 14px 36px rgba(0,255,157,.5)}
+  .conv-trigger-btn.has-badge::after{
+    content:attr(data-count); position:absolute;
+    top:-6px; right:-6px; background:var(--danger);
+    color:#fff; border-radius:999px; font-size:10px;
+    padding:1px 6px; font-weight:700;
+  }
+
+  .conv-panel{
+    position:fixed; bottom:82px; right:28px; z-index:490;
+    width:360px; max-height:calc(100vh - 120px);
+    background:var(--surface); border:1px solid var(--border-strong);
+    border-radius:16px; backdrop-filter:blur(20px);
+    box-shadow:0 30px 60px rgba(0,0,0,.55);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .conv-panel-inner{display:flex; flex-direction:column; height:100%; overflow:hidden}
+  .conv-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px; border-bottom:1px solid var(--border);
+    font-size:12px; font-weight:600; color:var(--text);
+  }
+  .conv-head-title{display:flex; align-items:center; gap:8px; color:var(--accent)}
+  .conv-sessions,.conv-turns{
+    flex:1; overflow-y:auto; padding:10px;
+    scrollbar-width:thin; scrollbar-color:var(--border) transparent;
+  }
+  .session-item{
+    padding:10px 12px; border-radius:10px; cursor:pointer;
+    border:1px solid var(--border); margin-bottom:6px;
+    background:var(--surface2); transition:all .15s;
+    display:flex; align-items:flex-start; gap:10px;
+  }
+  .session-item:hover{border-color:var(--border-strong); background:var(--accent-soft)}
+  .session-info{flex:1; min-width:0}
+  .session-title{font-size:12px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .session-meta{font-size:10px; color:var(--text3); margin-top:2px; font-family:'JetBrains Mono',monospace}
+  .session-del{color:var(--text3); font-size:14px; cursor:pointer; padding:2px 5px; border-radius:4px; transition:.15s; flex-shrink:0}
+  .session-del:hover{color:var(--danger); background:rgba(255,93,122,.1)}
+  .session-empty{text-align:center; color:var(--text3); font-size:12px; padding:30px 0}
+
+  .turn-item{
+    padding:10px 12px; border-radius:10px;
+    border:1px solid var(--border); margin-bottom:8px;
+    background:var(--surface2);
+  }
+  .turn-num{font-size:9px; font-family:'JetBrains Mono',monospace; color:var(--text3); margin-bottom:4px}
+  .turn-orig{font-size:11px; color:var(--text2); margin-bottom:5px; line-height:1.5}
+  .turn-type-badge{
+    display:inline-block; padding:2px 7px; border-radius:999px;
+    font-size:9px; font-weight:600; letter-spacing:1px; text-transform:uppercase;
+    background:var(--accent-soft); color:var(--accent); border:1px solid var(--border-strong);
+    margin-bottom:6px;
+  }
+  .turn-scores{display:flex; gap:8px; flex-wrap:wrap}
+  .turn-score-chip{
+    font-size:9px; font-family:'JetBrains Mono',monospace;
+    color:var(--text3); background:rgba(255,255,255,.04);
+    border:1px solid var(--border); border-radius:5px; padding:2px 6px;
+  }
+  .turn-score-chip .sv{color:var(--accent); font-weight:600}
+  .turn-use-btn{
+    margin-top:8px; width:100%; padding:5px 0; border-radius:7px;
+    background:transparent; border:1px solid var(--border);
+    color:var(--text3); font-size:10px; cursor:pointer; transition:.15s;
+  }
+  .turn-use-btn:hover{border-color:var(--border-strong); color:var(--accent)}
+
+  .recommend-box{
+    margin-top:10px; border-radius:12px;
+    border:1px solid rgba(179,136,255,.35);
+    background:rgba(179,136,255,.07); padding:14px;
+  }
+  .recommend-head{
+    font-size:11px; font-weight:700; color:var(--accent3);
+    display:flex; align-items:center; gap:6px; margin-bottom:10px;
+  }
+  .rec-rationale{font-size:11px; color:var(--text2); line-height:1.6; margin-bottom:8px}
+  .rec-chips{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px}
+  .rec-chip{
+    font-size:9px; font-weight:600; padding:3px 8px; border-radius:999px;
+    border:1px solid rgba(179,136,255,.4); color:var(--accent3);
+    font-family:'JetBrains Mono',monospace; text-transform:uppercase;
+  }
+  .rec-prompt-box{
+    background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.07);
+    border-radius:8px; padding:10px; font-size:11px; color:var(--text);
+    line-height:1.6; white-space:pre-wrap; font-family:inherit; margin-bottom:8px;
+  }
+  .rec-actions{display:flex; gap:6px}
+  .rec-btn{
+    display:flex; align-items:center; gap:6px;
+    background:rgba(179,136,255,.12); color:var(--accent3);
+    border-color:rgba(179,136,255,.3);
+    width:100%; justify-content:center; margin-top:10px;
+    padding:8px; border-radius:8px;
+  }
+  .rec-btn:hover{background:rgba(179,136,255,.2); border-color:rgba(179,136,255,.5)}
+
+  /* new-session indicator shown in header toolbar */
+  .history-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:6px 12px; border-radius:999px; font-size:11px; font-weight:600;
+    background:rgba(179,136,255,.1); color:var(--accent3);
+    border:1px solid rgba(179,136,255,.25); cursor:pointer;
+    font-family:'JetBrains Mono',monospace; transition:all .2s;
+  }
+  .history-pill:hover{background:rgba(179,136,255,.2); border-color:rgba(179,136,255,.5); transform:translateY(-1px)}
+  .history-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--accent3);box-shadow:0 0 10px var(--accent3); animation:pulse 1.6s ease-in-out infinite}
+
   .icon-btn{
     width:36px; height:36px; border-radius:10px;
     background:var(--surface); border:1px solid var(--border);
@@ -610,6 +729,9 @@
         <button class="icon-btn" id="btn-theme" title="Cycle ambient mode">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
         </button>
+        <div class="history-pill" id="btn-history" onclick="toggleConvPanel()" title="Conversation history">
+          <span class="dot"></span><span id="history-label">History</span>
+        </div>
       </div>
     </div>
   </header>
@@ -713,6 +835,35 @@
     </div>
 
     <div id="results"></div>
+
+    <!-- CONVERSATION HISTORY PANEL -->
+    <div class="conv-panel" id="conv-panel" style="display:none">
+      <div class="conv-panel-inner">
+        <div class="conv-head">
+          <span class="conv-head-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Conversation
+          </span>
+          <button class="ghost-btn" onclick="closeConvPanel()">✕</button>
+        </div>
+        <div id="conv-sessions-list" class="conv-sessions"></div>
+        <div id="conv-turns-view" class="conv-turns" style="display:none">
+          <button class="ghost-btn" style="margin-bottom:10px" onclick="showSessionsList()">← Back to sessions</button>
+          <div id="conv-turns-list"></div>
+          <div id="recommend-box" class="recommend-box" style="display:none">
+            <div class="recommend-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Next Best Prompt
+            </div>
+            <div id="recommend-body"></div>
+          </div>
+          <button class="ghost-btn rec-btn" id="btn-recommend" onclick="loadRecommendation()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Recommend Next Prompt
+          </button>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -1554,6 +1705,317 @@ document.getElementById('sql-count').addEventListener('click', e=>{ e.stopPropag
 /* ---------- CLEAR LOG / PAUSE STREAM ---------- */
 (function(){var b=document.getElementById('btn-clear-log'); if(b) b.addEventListener('click', ()=>{ var bd=document.getElementById('console-body'); if(bd) bd.innerHTML=''; });})();
 (function(){var b=document.getElementById('btn-pause-stream'); if(b) b.addEventListener('click', e=>{ streamPaused = !streamPaused; e.target.textContent = streamPaused?'Resume':'Pause'; });})();
+
+/* ════════════════════════════════════════════════════════
+   CONVERSATION TRACKING & NEXT-BEST-PROMPT
+   ════════════════════════════════════════════════════════ */
+
+// State
+let convPanelOpen    = false;
+let activeSessionId  = null;    // session currently being built
+let viewingSessionId = null;    // session open in history view
+
+// ── Auth token helper ────────────────────────────────────
+function getAuthToken(){
+  // Grab from sessionStorage if set during login/signup (existing auth flow stores it)
+  return sessionStorage.getItem('forge_token') || localStorage.getItem('forge_token') || '';
+}
+function authHeaders(){
+  const t = getAuthToken();
+  return t ? { 'Content-Type':'application/json', 'Authorization':'Bearer '+t } : { 'Content-Type':'application/json' };
+}
+
+// Patch existing fetch calls to include session_id
+const _origAnalyzePrompt = analyzePrompt;
+window.analyzePrompt = async function(){
+  // Delegate but we need to intercept the fetch — we monkey-patch below instead
+  return _origAnalyzePrompt();
+};
+
+// ── Patch the forge-prompt fetch to inject session_id + auth ─
+// We override the global fetch for /api/forge-prompt so we don't
+// duplicate all the streaming logic above.
+const _origFetch = window.fetch;
+window.fetch = async function(url, opts = {}){
+  if(typeof url === 'string' && url.includes('/api/forge-prompt')){
+    try {
+      const body = JSON.parse(opts.body || '{}');
+      if(activeSessionId) body.session_id = activeSessionId;
+      opts = { ...opts, body: JSON.stringify(body) };
+      // inject auth if available
+      const t = getAuthToken();
+      if(t) opts.headers = { ...(opts.headers||{}), 'Authorization':'Bearer '+t };
+    } catch(e){}
+  } else if(typeof url === 'string' && url.includes('/api/')){
+    const t = getAuthToken();
+    if(t) opts.headers = { ...(opts.headers||{}), 'Authorization':'Bearer '+t };
+  }
+  return _origFetch.call(this, url, opts);
+};
+
+// Also listen for session events emitted by the SSE stream
+// We intercept inside the existing analyzePrompt by patching the event loop
+// via a custom event approach — inject listener on custom event fired from stream
+document.addEventListener('forge:session', e=>{
+  const { session_id, turn_index } = e.detail;
+  if(!activeSessionId){
+    activeSessionId = session_id;
+    logLine('info', `session · ${session_id} · turn ${turn_index+1}`);
+  }
+  refreshHistoryCount();
+});
+
+// Patch stream processing: detect 'session' SSE event and dispatch DOM event
+// We do this by adding an afterburner after each SSE parse in the reader loop.
+// Easiest: wrap JSON.parse only for session events
+const _origJSONParse = JSON.parse;
+JSON.parse = function(text){
+  const obj = _origJSONParse.apply(this, arguments);
+  if(obj && obj.type === 'session' && obj.session_id){
+    setTimeout(()=>document.dispatchEvent(new CustomEvent('forge:session', { detail: obj })), 0);
+  }
+  return obj;
+};
+
+// ── Toggle panel ─────────────────────────────────────────
+function toggleConvPanel(){
+  convPanelOpen = !convPanelOpen;
+  const panel = document.getElementById('conv-panel');
+  panel.style.display = convPanelOpen ? 'flex' : 'none';
+  if(convPanelOpen){ showSessionsList(); }
+}
+function closeConvPanel(){
+  convPanelOpen = false;
+  document.getElementById('conv-panel').style.display = 'none';
+}
+
+// ── Sessions list ────────────────────────────────────────
+async function showSessionsList(){
+  document.getElementById('conv-sessions-list').style.display = 'block';
+  document.getElementById('conv-turns-view').style.display = 'none';
+  viewingSessionId = null;
+  await renderSessionsList();
+}
+
+async function renderSessionsList(){
+  const list = document.getElementById('conv-sessions-list');
+  list.innerHTML = '<div class="session-empty">Loading…</div>';
+  try {
+    const r = await _origFetch('/api/sessions', { headers: authHeaders() });
+    if(!r.ok){ list.innerHTML = '<div class="session-empty">Sign in to view history</div>'; return; }
+    const sessions = await r.json();
+    if(!sessions.length){
+      list.innerHTML = '<div class="session-empty">No conversations yet.<br/>Forge a prompt to start one.</div>';
+      return;
+    }
+    list.innerHTML = sessions.map(s=>`
+      <div class="session-item" data-id="${s.id}">
+        <div class="session-info">
+          <div class="session-title">${escHtml(s.title || 'Untitled')}</div>
+          <div class="session-meta">${s.turn_count} turn${s.turn_count!==1?'s':''} · ${relTime(s.updated_at)}</div>
+        </div>
+        <span class="session-del" title="Delete" onclick="event.stopPropagation();deleteSession('${s.id}')">✕</span>
+      </div>`).join('');
+    list.querySelectorAll('.session-item').forEach(el=>{
+      el.addEventListener('click', ()=>openSession(el.dataset.id));
+    });
+    updateHistoryLabel(sessions.length);
+  } catch(e){
+    list.innerHTML = '<div class="session-empty">Could not load history</div>';
+  }
+}
+
+async function deleteSession(id){
+  if(!confirm('Delete this conversation?')) return;
+  await _origFetch(`/api/sessions/${id}`, { method:'DELETE', headers: authHeaders() });
+  if(activeSessionId === id) activeSessionId = null;
+  await renderSessionsList();
+  toast('Conversation deleted');
+  refreshHistoryCount();
+}
+
+// ── Session detail / turns ───────────────────────────────
+async function openSession(id){
+  viewingSessionId = id;
+  document.getElementById('conv-sessions-list').style.display = 'none';
+  document.getElementById('conv-turns-view').style.display = 'block';
+  document.getElementById('recommend-box').style.display = 'none';
+  document.getElementById('btn-recommend').textContent = '⚡ Recommend Next Prompt';
+
+  const turnsList = document.getElementById('conv-turns-list');
+  turnsList.innerHTML = '<div class="session-empty">Loading…</div>';
+
+  try {
+    const r = await _origFetch(`/api/sessions/${id}`, { headers: authHeaders() });
+    if(!r.ok){ turnsList.innerHTML = '<div class="session-empty">Error loading session</div>'; return; }
+    const { session, turns } = await r.json();
+
+    turnsList.innerHTML = turns.map((t,i)=>`
+      <div class="turn-item">
+        <div class="turn-num">TURN ${i+1} · ${relTime(t.created_at)}</div>
+        <span class="turn-type-badge">${t.prompt_type||'?'}</span>
+        <div class="turn-orig">${escHtml((t.original_prompt||'').slice(0,160))}${(t.original_prompt||'').length>160?'…':''}</div>
+        <div class="turn-scores">
+          <div class="turn-score-chip">clarity <span class="sv">${t.score_clarity??'—'}</span></div>
+          <div class="turn-score-chip">specificity <span class="sv">${t.score_specificity??'—'}</span></div>
+          <div class="turn-score-chip">tone <span class="sv">${t.score_tone??'—'}</span></div>
+          <div class="turn-score-chip">overall <span class="sv">${t.score_overall??'—'}</span></div>
+        </div>
+        ${t.improved_prompt ? `<button class="turn-use-btn" onclick="useImproved(${JSON.stringify(t.improved_prompt)})">↑ Use this improved prompt</button>` : ''}
+      </div>`).join('') || '<div class="session-empty">No turns yet</div>';
+  } catch(e){
+    turnsList.innerHTML = '<div class="session-empty">Failed to load turns</div>';
+  }
+}
+
+function useImproved(text){
+  closeConvPanel();
+  activeSessionId = viewingSessionId;  // continue in same session
+  document.getElementById('prompt-input').value = text;
+  updateCount('prompt');
+  if(activeTab !== 0) switchTab(0);
+  toast('Improved prompt loaded — ready to forge');
+  logLine('info', 'loaded improved prompt from history');
+}
+
+// ── Next-best-prompt recommendation ─────────────────────
+async function loadRecommendation(){
+  if(!viewingSessionId) return;
+  const box = document.getElementById('recommend-box');
+  const body = document.getElementById('recommend-body');
+  const btn  = document.getElementById('btn-recommend');
+  btn.textContent = '⏳ Analysing…';
+  btn.disabled = true;
+  box.style.display = 'none';
+
+  try {
+    const r = await _origFetch(`/api/sessions/${viewingSessionId}/recommend`, {
+      method:'POST', headers: authHeaders()
+    });
+    if(!r.ok){
+      const err = await r.json().catch(()=>({detail:'Error'}));
+      toast('Recommendation failed: ' + (err.detail||r.status));
+      btn.textContent = '⚡ Recommend Next Prompt'; btn.disabled = false;
+      return;
+    }
+    const rec = await r.json();
+    body.innerHTML = `
+      <div class="rec-rationale">${escHtml(rec.rationale||'')}</div>
+      <div class="rec-chips">
+        <span class="rec-chip">Focus: ${escHtml(rec.focus_area||'?')}</span>
+        <span class="rec-chip">${escHtml(rec.predicted_improvement||'')}</span>
+      </div>
+      <div class="rec-prompt-box">${escHtml(rec.recommendation||'')}</div>
+      <div class="rec-actions">
+        <button class="ghost-btn" style="flex:1" onclick="useRecommendation(${JSON.stringify(rec.recommendation||'')})">
+          ↑ Use this prompt
+        </button>
+        <button class="ghost-btn" onclick="copyText(${JSON.stringify(rec.recommendation||'')}, 'Recommendation copied')">
+          Copy
+        </button>
+      </div>`;
+    box.style.display = 'block';
+    btn.textContent = '↺ Refresh Recommendation'; btn.disabled = false;
+    logLine('ok', `recommendation · focus:${rec.focus_area} · ${rec.predicted_improvement}`);
+  } catch(e){
+    toast('Error: ' + e.message);
+    btn.textContent = '⚡ Recommend Next Prompt'; btn.disabled = false;
+  }
+}
+
+function useRecommendation(text){
+  closeConvPanel();
+  activeSessionId = viewingSessionId;
+  document.getElementById('prompt-input').value = text;
+  updateCount('prompt');
+  if(activeTab !== 0) switchTab(0);
+  toast('Recommended prompt loaded — forge it!');
+  logLine('info', 'loaded ai recommendation into prompt input');
+}
+
+// ── "Continue session" button after each forge ───────────
+// We inject a small CTA below the result card after a successful forge.
+document.addEventListener('forge:session', e=>{
+  const { session_id } = e.detail;
+  // Only add once per result
+  if(document.getElementById('conv-continue-cta')) return;
+  const results = document.getElementById('results');
+  if(!results) return;
+  const cta = document.createElement('div');
+  cta.id = 'conv-continue-cta';
+  cta.style.cssText = 'display:flex;gap:8px;max-width:1180px;margin:0 auto 18px;';
+  cta.innerHTML = `
+    <button class="ghost-btn" style="flex:1" onclick="continueSession()">
+      ↩ Continue this session with a follow-up prompt
+    </button>
+    <button class="ghost-btn" onclick="startNewSession()">
+      + New session
+    </button>
+    <button class="ghost-btn" onclick="viewAndRecommend('${session_id}')">
+      ⚡ Get next-best-prompt recommendation
+    </button>`;
+  results.after(cta);
+});
+
+function continueSession(){
+  // Keep activeSessionId, clear input, focus
+  document.getElementById('prompt-input').value = '';
+  updateCount('prompt');
+  if(activeTab !== 0) switchTab(0);
+  document.getElementById('prompt-input').focus();
+  const cta = document.getElementById('conv-continue-cta');
+  if(cta) cta.remove();
+  resetResults();
+  toast('Continue typing your next prompt in this session');
+}
+
+function startNewSession(){
+  activeSessionId = null;
+  document.getElementById('prompt-input').value = '';
+  updateCount('prompt');
+  const cta = document.getElementById('conv-continue-cta');
+  if(cta) cta.remove();
+  resetResults();
+  if(activeTab !== 0) switchTab(0);
+  toast('New session started');
+}
+
+async function viewAndRecommend(id){
+  convPanelOpen = true;
+  document.getElementById('conv-panel').style.display = 'flex';
+  await openSession(id);
+  loadRecommendation();
+}
+
+// ── History pill count ───────────────────────────────────
+async function refreshHistoryCount(){
+  try {
+    const r = await _origFetch('/api/sessions', { headers: authHeaders() });
+    if(!r.ok) return;
+    const sessions = await r.json();
+    updateHistoryLabel(sessions.length);
+  } catch(e){}
+}
+
+function updateHistoryLabel(count){
+  const lbl = document.getElementById('history-label');
+  if(lbl) lbl.textContent = count > 0 ? `History (${count})` : 'History';
+}
+
+// ── Utilities ────────────────────────────────────────────
+function relTime(iso){
+  if(!iso) return '';
+  const d = new Date(iso.replace(' ','T')+'Z');
+  const s = Math.floor((Date.now()-d)/1000);
+  if(s<60) return 'just now';
+  if(s<3600) return `${Math.floor(s/60)}m ago`;
+  if(s<86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
+
+// Init: fetch history count on load (if authed)
+setTimeout(refreshHistoryCount, 1500);
+
 </script>
 </body>
 </html>

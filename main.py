@@ -62,6 +62,31 @@ def init_db():
                 ls_sub_id      TEXT,                             -- Lemon Squeezy subscription id
                 created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
             );
+
+            CREATE TABLE IF NOT EXISTS sessions (
+                id          TEXT    PRIMARY KEY,           -- UUID
+                user_id     INTEGER NOT NULL,
+                title       TEXT,                          -- auto-generated from first prompt
+                created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+                updated_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            );
+
+            CREATE TABLE IF NOT EXISTS conversation_turns (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id      TEXT    NOT NULL,
+                user_id         INTEGER NOT NULL,
+                turn_index      INTEGER NOT NULL,
+                original_prompt TEXT    NOT NULL,
+                improved_prompt TEXT,
+                prompt_type     TEXT,
+                score_clarity   INTEGER,
+                score_specificity INTEGER,
+                score_tone      INTEGER,
+                score_overall   INTEGER,
+                created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (session_id) REFERENCES sessions(id)
+            );
         """)
 
 @contextmanager
@@ -176,10 +201,17 @@ class LoginRequest(BaseModel):
 
 class PromptRequest(BaseModel):
     prompt: str
+    session_id: str | None = None   # existing session; None = create new
 
 class SqlRequest(BaseModel):
     description: str
     dialect: str = "PostgreSQL"
+
+class SessionCreateRequest(BaseModel):
+    title: str | None = None
+
+class NextPromptRequest(BaseModel):
+    session_id: str
 
 # ── Groq helpers ──────────────────────────────────────────────────────────────
 def groq_headers() -> dict:
@@ -409,21 +441,186 @@ async def forge_prompt(req: PromptRequest, user: dict = Depends(current_user)):
         "No explanation, no markdown — raw JSON only."
     )
 
+    # ── Session handling ──────────────────────────────────────────────────────
+    session_id = req.session_id
+    with get_db() as conn:
+        if session_id:
+            # Validate session belongs to this user
+            row = conn.execute(
+                "SELECT id FROM sessions WHERE id = ? AND user_id = ?",
+                (session_id, user["id"])
+            ).fetchone()
+            if not row:
+                session_id = None
+
+        if not session_id:
+            session_id = secrets.token_urlsafe(16)
+            title = req.prompt[:60].strip()
+            conn.execute(
+                "INSERT INTO sessions (id, user_id, title) VALUES (?, ?, ?)",
+                (session_id, user["id"], title)
+            )
+
+        turn_index = conn.execute(
+            "SELECT COUNT(*) FROM conversation_turns WHERE session_id = ?",
+            (session_id,)
+        ).fetchone()[0]
+
     async def event_stream():
+        improved_parts = []
+        scores_data = {}
         try:
             async for token in stream_groq(forge_system, req.prompt):
+                improved_parts.append(token)
                 yield sse({"type": "token", "text": token})
+
             raw_json = await call_groq(scores_system, req.prompt, max_tokens=128)
             raw_json = raw_json.strip("`").strip()
             if raw_json.startswith("json"):
                 raw_json = raw_json[4:].strip()
-            scores = json.loads(raw_json)
-            yield sse({"type": "scores", **scores})
+            scores_data = json.loads(raw_json)
+            yield sse({"type": "scores", **scores_data})
+
+            # Persist the turn
+            improved = "".join(improved_parts)
+            with get_db() as conn:
+                conn.execute(
+                    """INSERT INTO conversation_turns
+                       (session_id, user_id, turn_index, original_prompt, improved_prompt,
+                        prompt_type, score_clarity, score_specificity, score_tone, score_overall)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (session_id, user["id"], turn_index, req.prompt, improved,
+                     prompt_type,
+                     scores_data.get("clarity"), scores_data.get("specificity"),
+                     scores_data.get("tone"), scores_data.get("overall"))
+                )
+                conn.execute(
+                    "UPDATE sessions SET updated_at = datetime('now') WHERE id = ?",
+                    (session_id,)
+                )
+
+            yield sse({"type": "session", "session_id": session_id, "turn_index": turn_index})
             yield sse({"type": "done"})
         except Exception as e:
             yield sse({"type": "error", "message": str(e)})
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+# ── Session & conversation history routes ─────────────────────────────────────
+
+@app.get("/api/sessions")
+async def list_sessions(user: dict = Depends(current_user)):
+    """Return all sessions for the current user, newest first."""
+    with get_db() as conn:
+        rows = conn.execute(
+            """SELECT s.id, s.title, s.created_at, s.updated_at,
+                      COUNT(t.id) as turn_count
+               FROM sessions s
+               LEFT JOIN conversation_turns t ON t.session_id = s.id
+               WHERE s.user_id = ?
+               GROUP BY s.id
+               ORDER BY s.updated_at DESC
+               LIMIT 50""",
+            (user["id"],)
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+@app.get("/api/sessions/{session_id}")
+async def get_session(session_id: str, user: dict = Depends(current_user)):
+    """Return all turns in a session."""
+    with get_db() as conn:
+        sess = conn.execute(
+            "SELECT * FROM sessions WHERE id = ? AND user_id = ?",
+            (session_id, user["id"])
+        ).fetchone()
+        if not sess:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        turns = conn.execute(
+            """SELECT * FROM conversation_turns
+               WHERE session_id = ? ORDER BY turn_index ASC""",
+            (session_id,)
+        ).fetchall()
+
+    return {
+        "session": dict(sess),
+        "turns": [dict(t) for t in turns],
+    }
+
+
+@app.delete("/api/sessions/{session_id}")
+async def delete_session(session_id: str, user: dict = Depends(current_user)):
+    with get_db() as conn:
+        sess = conn.execute(
+            "SELECT id FROM sessions WHERE id = ? AND user_id = ?",
+            (session_id, user["id"])
+        ).fetchone()
+        if not sess:
+            raise HTTPException(status_code=404, detail="Session not found")
+        conn.execute("DELETE FROM conversation_turns WHERE session_id = ?", (session_id,))
+        conn.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+    return {"deleted": True}
+
+
+@app.post("/api/sessions/{session_id}/recommend")
+async def recommend_next_prompt(session_id: str, user: dict = Depends(current_user)):
+    """Analyse the session history and recommend the single best next prompt."""
+    if not GROQ_API_KEY:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
+
+    with get_db() as conn:
+        sess = conn.execute(
+            "SELECT * FROM sessions WHERE id = ? AND user_id = ?",
+            (session_id, user["id"])
+        ).fetchone()
+        if not sess:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        turns = conn.execute(
+            """SELECT original_prompt, improved_prompt, prompt_type,
+                      score_clarity, score_specificity, score_tone, score_overall
+               FROM conversation_turns WHERE session_id = ?
+               ORDER BY turn_index ASC""",
+            (session_id,)
+        ).fetchall()
+
+    if not turns:
+        raise HTTPException(status_code=400, detail="No turns in this session yet")
+
+    history_summary = "\n".join(
+        f"Turn {i+1} [{t['prompt_type']}] (clarity:{t['score_clarity']} spec:{t['score_specificity']} "
+        f"tone:{t['score_tone']} overall:{t['score_overall']})\n"
+        f"  Original: {t['original_prompt'][:200]}\n"
+        f"  Improved: {(t['improved_prompt'] or '')[:200]}"
+        for i, t in enumerate([dict(r) for r in turns])
+    )
+
+    system = (
+        "You are an expert AI prompt strategist. "
+        "Analyse the conversation history below and recommend the single best NEXT prompt "
+        "the user should try. Your recommendation must directly build on what has been explored, "
+        "address any weak scores (clarity/specificity/tone), and push toward best practice, "
+        "efficiency, productivity, and accuracy. "
+        "Respond ONLY with a JSON object with these keys: "
+        '{"recommendation": "<the exact next prompt text ready to paste>", '
+        '"rationale": "<2-3 sentence explanation of why this is the ideal next step>", '
+        '"focus_area": "<one of: clarity | specificity | tone | depth | efficiency | accuracy>", '
+        '"predicted_improvement": "<short phrase, e.g. +18 overall score>"}'
+        " No markdown, no extra keys."
+    )
+
+    raw = await call_groq(system, history_summary, max_tokens=512)
+    raw = raw.strip().strip("`")
+    if raw.startswith("json"):
+        raw = raw[4:].strip()
+    try:
+        result = json.loads(raw)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Model returned unparseable JSON")
+
+    return result
 
 
 @app.post("/api/generate-sql")
@@ -464,6 +661,143 @@ async def generate_sql(req: SqlRequest, user: dict = Depends(current_user)):
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "model": MODEL, "api_key_set": bool(GROQ_API_KEY)}
+
+
+# ── Browser Extension endpoints ───────────────────────────────────────────────
+# These are called from the Chrome extension content script.
+# Auth is via Bearer token stored in extension storage (same JWT as web app).
+
+class ExtTurnRequest(BaseModel):
+    """One user→AI exchange scraped from a supported AI chat UI."""
+    ai_platform:   str          # "chatgpt" | "claude" | "gemini" | "perplexity" | "other"
+    session_id:    str | None = None
+    user_message:  str
+    ai_response:   str | None = None   # may be empty if scraped before AI finishes
+    turn_index:    int = 0
+
+class ExtRecommendRequest(BaseModel):
+    """Raw turn list from the extension — no DB session required."""
+    ai_platform:  str
+    turns: list[dict]           # [{user_message, ai_response, turn_index}]
+
+
+@app.post("/api/ext/track-turn")
+async def ext_track_turn(req: ExtTurnRequest, user: dict = Depends(current_user)):
+    """
+    Called by the browser extension each time a new user→AI exchange completes.
+    Persists the turn and returns a lightweight quality score + session_id.
+    """
+    if not GROQ_API_KEY:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
+
+    # Resolve / create session
+    with get_db() as conn:
+        session_id = req.session_id
+        if session_id:
+            row = conn.execute(
+                "SELECT id FROM sessions WHERE id = ? AND user_id = ?",
+                (session_id, user["id"])
+            ).fetchone()
+            if not row:
+                session_id = None
+
+        if not session_id:
+            session_id = secrets.token_urlsafe(16)
+            title = f"[{req.ai_platform.upper()}] {req.user_message[:55].strip()}"
+            conn.execute(
+                "INSERT INTO sessions (id, user_id, title) VALUES (?, ?, ?)",
+                (session_id, user["id"], title)
+            )
+
+        turn_index = conn.execute(
+            "SELECT COUNT(*) FROM conversation_turns WHERE session_id = ?",
+            (session_id,)
+        ).fetchone()[0]
+
+    # Score the user message
+    scores_system = (
+        "You are a prompt quality evaluator. "
+        "Given a user message sent to an AI, return ONLY a JSON object with keys: "
+        "clarity, specificity, tone, overall — each an integer 0-100. "
+        "No explanation, no markdown, raw JSON only."
+    )
+    try:
+        raw_json = await call_groq(scores_system, req.user_message, max_tokens=80)
+        raw_json = raw_json.strip().strip("`")
+        if raw_json.startswith("json"):
+            raw_json = raw_json[4:].strip()
+        scores = json.loads(raw_json)
+    except Exception:
+        scores = {"clarity": 0, "specificity": 0, "tone": 0, "overall": 0}
+
+    # Persist turn
+    with get_db() as conn:
+        conn.execute(
+            """INSERT INTO conversation_turns
+               (session_id, user_id, turn_index, original_prompt, improved_prompt,
+                prompt_type, score_clarity, score_specificity, score_tone, score_overall)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (session_id, user["id"], turn_index,
+             req.user_message,
+             req.ai_response,          # store AI response in improved_prompt field
+             req.ai_platform,
+             scores.get("clarity"), scores.get("specificity"),
+             scores.get("tone"), scores.get("overall"))
+        )
+        conn.execute(
+            "UPDATE sessions SET updated_at = datetime('now') WHERE id = ?",
+            (session_id,)
+        )
+
+    return {
+        "session_id": session_id,
+        "turn_index": turn_index,
+        "scores": scores,
+    }
+
+
+@app.post("/api/ext/recommend")
+async def ext_recommend(req: ExtRecommendRequest, user: dict = Depends(current_user)):
+    """
+    Takes raw turns from the extension (no DB required) and returns the
+    single best next prompt recommendation.
+    """
+    if not GROQ_API_KEY:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
+
+    if not req.turns:
+        raise HTTPException(status_code=400, detail="No turns provided")
+
+    history_text = "\n\n".join(
+        f"Turn {t.get('turn_index', i)+1}:\n"
+        f"  User: {str(t.get('user_message',''))[:300]}\n"
+        f"  AI:   {str(t.get('ai_response',''))[:300]}"
+        for i, t in enumerate(req.turns)
+    )
+
+    system = (
+        f"You are an expert AI prompt strategist. The user is chatting with {req.ai_platform}. "
+        "Analyse the conversation below and recommend the single best NEXT prompt they should send. "
+        "It must directly build on what has been covered, be clearer and more specific, "
+        "and push toward best practice, efficiency, productivity, and accuracy. "
+        "Respond ONLY with a JSON object: "
+        '{"recommendation": "<exact next prompt, ready to paste>", '
+        '"rationale": "<2-3 sentences on why this is the ideal next step>", '
+        '"focus_area": "<clarity|specificity|depth|efficiency|accuracy|follow-up>", '
+        '"predicted_improvement": "<short phrase>"} '
+        "No markdown, no extra keys."
+    )
+
+    raw = await call_groq(system, history_text, max_tokens=512)
+    raw = raw.strip().strip("`")
+    if raw.startswith("json"):
+        raw = raw[4:].strip()
+    try:
+        result = json.loads(raw)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Model returned unparseable JSON")
+
+    return result
 
 
 # Static files — mounted last so API routes take priority
