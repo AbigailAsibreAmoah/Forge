@@ -113,13 +113,57 @@ async def forge_prompt(req: PromptRequest):
     if not GROQ_API_KEY:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not set")
 
-    forge_system = (
-        "You are an expert prompt engineer. "
-        "When given a raw prompt, rewrite it to be maximally effective for a large language model: "
-        "add an expert role framing, set a clear tone and target audience, constrain the output format, "
-        "and require a concrete takeaway. Keep it concise — under 280 words. "
-        "Return ONLY the improved prompt text, nothing else."
+    # --- AI-powered prompt type classifier ---
+    # Ask Groq to classify the prompt into one of 5 categories,
+    # then select the matching system prompt. No hardcoded keywords.
+    classifier_system = (
+        "Classify the following prompt into exactly ONE of these categories: "
+        "technical, creative, analytical, conversational, instructional. "
+        "Reply with just the single lowercase word, nothing else."
     )
+    try:
+        prompt_type = await call_groq(classifier_system, req.prompt, max_tokens=5)
+        prompt_type = prompt_type.strip().lower()
+    except Exception:
+        prompt_type = "conversational"  # safe fallback
+
+    SYSTEM_PROMPTS = {
+        "technical": (
+            "You are an expert software prompt engineer. "
+            "Rewrite the given prompt into a precise technical specification an AI coding assistant can execute directly. "
+            "Include: (1) exact deliverable, (2) tech stack, (3) key features as bullets, "
+            "(4) data persistence if relevant, (5) UI/UX constraints if frontend. "
+            "No marketing language. Under 200 words. Return ONLY the improved prompt."
+        ),
+        "creative": (
+            "You are a creative writing prompt specialist. "
+            "Rewrite the given prompt to unlock richer, more vivid output from an AI: "
+            "set a strong narrative voice, establish mood and setting, define the desired style or genre, "
+            "and specify length or format. Under 200 words. Return ONLY the improved prompt."
+        ),
+        "analytical": (
+            "You are an expert research and analysis prompt engineer. "
+            "Rewrite the given prompt to produce structured, evidence-based AI output: "
+            "define the scope, specify the analytical framework or methodology, "
+            "require citations or sources where relevant, and set the output format (table, report, bullets). "
+            "Under 200 words. Return ONLY the improved prompt."
+        ),
+        "instructional": (
+            "You are an expert instructional design prompt engineer. "
+            "Rewrite the given prompt to produce clear, step-by-step AI output: "
+            "define the target audience and skill level, specify the number of steps or sections, "
+            "require examples or visuals where helpful, and set a practical takeaway. "
+            "Under 200 words. Return ONLY the improved prompt."
+        ),
+        "conversational": (
+            "You are an expert prompt engineer. "
+            "Rewrite the given prompt to be maximally effective for a large language model: "
+            "add an expert role framing, set a clear tone and target audience, constrain the output format, "
+            "and require a concrete takeaway. Under 280 words. Return ONLY the improved prompt."
+        ),
+    }
+
+    forge_system = SYSTEM_PROMPTS.get(prompt_type, SYSTEM_PROMPTS["conversational"])
 
     scores_system = (
         "You are a prompt quality evaluator. "
