@@ -2,7 +2,7 @@
 Forge Backend — FastAPI + Groq streaming
 Auth: JWT (email + password)
 Tiers: free (20 uses/month), paid (unlimited)
-Payments: Lemon Squeezy webhooks
+Payments: Paystack webhooks
 """
 import os
 import json
@@ -40,7 +40,7 @@ MODEL                 = "llama-3.3-70b-versatile"
 JWT_SECRET            = os.getenv("JWT_SECRET", secrets.token_hex(32))  # set a stable value in Railway
 JWT_EXPIRY_DAYS       = 30
 
-LEMON_WEBHOOK_SECRET  = os.getenv("LEMON_WEBHOOK_SECRET", "")  # from Lemon Squeezy dashboard
+PAYSTACK_SECRET_KEY   = os.getenv("PAYSTACK_SECRET_KEY", "")  # sk_live_... from Paystack dashboard
 
 FREE_MONTHLY_LIMIT    = 20   # refinements per month for free tier
 
@@ -58,8 +58,8 @@ def init_db():
                 tier          TEXT    NOT NULL DEFAULT 'free',   -- 'free' | 'paid'
                 usage_count   INTEGER NOT NULL DEFAULT 0,
                 usage_reset   TEXT    NOT NULL,                  -- ISO date of next monthly reset
-                ls_customer_id TEXT,                             -- Lemon Squeezy customer id
-                ls_sub_id      TEXT,                             -- Lemon Squeezy subscription id
+                ls_customer_id TEXT,                             -- Paystack customer code
+                ls_sub_id      TEXT,                             -- Paystack subscription code
                 created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
             );
 
@@ -182,7 +182,7 @@ def check_and_increment_usage(user: dict):
                     detail={
                         "code": "limit_reached",
                         "message": f"You've used all {FREE_MONTHLY_LIMIT} free refinements this month.",
-                        "upgrade_url": os.getenv("UPGRADE_URL", "https://forge.lemonsqueezy.com/checkout"),
+                        "upgrade_url": os.getenv("UPGRADE_URL", "https://paystack.com/pay/forge"),
                     }
                 )
             conn.execute(
@@ -329,20 +329,24 @@ async def me(user: dict = Depends(current_user)):
         "usage_reset": user["usage_reset"],
     }
 
-# ── Lemon Squeezy webhook ─────────────────────────────────────────────────────
-@app.post("/api/webhooks/lemonsqueezy")
-async def lemonsqueezy_webhook(request: Request):
+# ── Paystack webhook ──────────────────────────────────────────────────────────
+@app.post("/api/webhooks/paystack")
+async def paystack_webhook(request: Request):
     """
-    Handles subscription_created, subscription_updated, subscription_cancelled.
-    Verify the signature with LEMON_WEBHOOK_SECRET set in Railway env vars.
+    Handles Paystack events: charge.success, subscription.create,
+    subscription.disable, invoice.payment_failed.
+
+    Verify the signature using PAYSTACK_SECRET_KEY set in Railway env vars.
+    Paystack signs the raw body with HMAC-SHA512 and sends it in
+    the X-Paystack-Signature header.
     """
     body = await request.body()
 
     # Verify signature
-    if LEMON_WEBHOOK_SECRET:
-        sig = request.headers.get("X-Signature", "")
+    if PAYSTACK_SECRET_KEY:
+        sig = request.headers.get("x-paystack-signature", "")
         expected = hmac.new(
-            LEMON_WEBHOOK_SECRET.encode(), body, hashlib.sha256
+            PAYSTACK_SECRET_KEY.encode(), body, hashlib.sha512
         ).hexdigest()
         if not hmac.compare_digest(sig, expected):
             raise HTTPException(status_code=401, detail="Invalid webhook signature")
@@ -352,26 +356,30 @@ async def lemonsqueezy_webhook(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON")
 
-    event = data.get("meta", {}).get("event_name", "")
-    attrs  = data.get("data", {}).get("attributes", {})
-    customer_email = attrs.get("user_email", "").strip().lower()
-    customer_id    = str(data.get("data", {}).get("relationships", {}).get("customer", {}).get("data", {}).get("id", ""))
-    sub_id         = str(data.get("data", {}).get("id", ""))
-    status         = attrs.get("status", "")
+    event = data.get("event", "")
+    obj   = data.get("data", {})
+
+    # Paystack puts the customer email in different places depending on event
+    customer_email = (
+        obj.get("customer", {}).get("email", "")
+        or obj.get("email", "")
+    ).strip().lower()
+
+    customer_code = obj.get("customer", {}).get("customer_code", "")
+    sub_code      = obj.get("subscription_code", "") or obj.get("plan", {}).get("plan_code", "")
 
     with get_db() as conn:
-        if event in ("subscription_created", "subscription_updated"):
-            new_tier = "paid" if status == "active" else "free"
+        if event in ("charge.success", "subscription.create"):
+            # Payment succeeded — upgrade to paid
             conn.execute(
                 """UPDATE users
-                   SET tier = ?, ls_customer_id = ?, ls_sub_id = ?
+                   SET tier = 'paid', ls_customer_id = ?, ls_sub_id = ?
                    WHERE email = ?""",
-                (new_tier, customer_id, sub_id, customer_email)
+                (customer_code, sub_code, customer_email)
             )
 
-        elif event == "subscription_cancelled":
-            # Downgrade at period end — Lemon sends a final "subscription_updated"
-            # with status="cancelled" or "expired" when it actually ends.
+        elif event in ("subscription.disable", "invoice.payment_failed"):
+            # Subscription cancelled or payment failed — downgrade
             conn.execute(
                 "UPDATE users SET tier = 'free' WHERE email = ?",
                 (customer_email,)
@@ -635,7 +643,7 @@ async def generate_sql(req: SqlRequest, user: dict = Depends(current_user)):
             detail={
                 "code": "paid_only",
                 "message": "SQL generation is a paid feature.",
-                "upgrade_url": os.getenv("UPGRADE_URL", "https://forge.lemonsqueezy.com/checkout"),
+                "upgrade_url": os.getenv("UPGRADE_URL", "https://paystack.com/pay/forge"),
             }
         )
 

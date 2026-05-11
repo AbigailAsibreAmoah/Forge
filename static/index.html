@@ -167,6 +167,126 @@
   .brand{cursor:pointer}
   .brand:hover .brand-name{filter:brightness(1.15)}
 
+  /* ── Auth Modal ── */
+  #auth-modal{
+    display:none; position:fixed; inset:0; z-index:10000;
+    background:rgba(5,6,15,.88);
+    backdrop-filter:blur(18px) saturate(120%);
+    -webkit-backdrop-filter:blur(18px) saturate(120%);
+    align-items:center; justify-content:center;
+  }
+  #auth-modal.visible{ display:flex; animation:authFadeIn .3s ease; }
+  @keyframes authFadeIn{ from{opacity:0; transform:scale(.96)} to{opacity:1; transform:scale(1)} }
+  .auth-box{
+    background:var(--bg2);
+    border:1px solid rgba(0,255,157,.18);
+    border-radius:20px;
+    padding:40px 36px 32px;
+    width:400px; max-width:92vw;
+    box-shadow:0 32px 80px rgba(0,0,0,.6), 0 0 80px rgba(0,255,157,.06);
+    position:relative;
+  }
+  .auth-box::before{
+    content:''; position:absolute; inset:-1px; border-radius:21px;
+    background:linear-gradient(135deg, rgba(0,255,157,.2), rgba(0,212,255,.1), transparent 60%);
+    z-index:-1; pointer-events:none;
+  }
+  .auth-logo{
+    display:flex; align-items:center; gap:12px; margin-bottom:28px;
+  }
+  .auth-logo-icon{
+    width:40px; height:40px; border-radius:10px;
+    background:linear-gradient(135deg,#00ff9d,#00d4ff);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; font-weight:900; color:#001a10;
+    box-shadow:0 6px 20px rgba(0,255,157,.35);
+  }
+  .auth-logo-text{
+    font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700;
+    background:linear-gradient(90deg,#fff,#00ff9d);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .auth-headline{
+    font-size:22px; font-weight:700; color:var(--text);
+    margin-bottom:6px; font-family:'Space Grotesk',sans-serif;
+  }
+  .auth-sub{
+    font-size:13px; color:var(--text3); margin-bottom:28px; line-height:1.5;
+  }
+  .auth-label{
+    display:block; font-size:11px; font-weight:600; letter-spacing:.06em;
+    color:var(--text3); text-transform:uppercase; margin-bottom:7px;
+  }
+  .auth-input{
+    width:100%; padding:12px 14px; margin-bottom:16px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:rgba(255,255,255,.04);
+    color:var(--text); font-family:'Inter',sans-serif; font-size:14px;
+    outline:none; transition:border-color .2s, box-shadow .2s;
+  }
+  .auth-input:focus{
+    border-color:var(--border-strong);
+    box-shadow:0 0 0 3px rgba(0,255,157,.1);
+  }
+  .auth-input::placeholder{ color:var(--text3); }
+  .auth-submit{
+    width:100%; padding:13px;
+    background:linear-gradient(135deg,#00ff9d,#00d4ff);
+    color:#001a10; border:none; border-radius:10px;
+    font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:700;
+    letter-spacing:.03em; cursor:pointer;
+    box-shadow:0 8px 24px rgba(0,255,157,.3);
+    transition:transform .15s, box-shadow .2s;
+    position:relative; overflow:hidden;
+  }
+  .auth-submit::before{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+    transform:translateX(-100%); transition:transform .4s ease;
+  }
+  .auth-submit:hover::before{ transform:translateX(100%); }
+  .auth-submit:hover{ transform:translateY(-1px); box-shadow:0 12px 32px rgba(0,255,157,.4); }
+  .auth-submit:active{ transform:translateY(0); }
+  .auth-submit:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
+  .auth-error{
+    font-size:12px; color:var(--danger); min-height:18px;
+    margin-top:10px; text-align:center;
+    background:rgba(255,93,122,.08); border-radius:6px;
+    padding:0; transition:padding .2s, opacity .2s; opacity:0;
+  }
+  .auth-error.visible{ padding:8px 12px; opacity:1; }
+  .auth-footer{
+    text-align:center; font-size:12px; color:var(--text3);
+    margin-top:20px;
+  }
+  .auth-footer a{
+    color:var(--accent); text-decoration:none; font-weight:600;
+    transition:opacity .15s;
+  }
+  .auth-footer a:hover{ opacity:.8; }
+  .auth-divider{
+    display:flex; align-items:center; gap:12px; margin:20px 0;
+  }
+  .auth-divider::before,.auth-divider::after{
+    content:''; flex:1; height:1px; background:var(--border);
+  }
+  .auth-divider span{ font-size:11px; color:var(--text3); white-space:nowrap; }
+  /* User menu in header */
+  .user-chip{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 12px; border-radius:999px;
+    font-size:11px; font-weight:600;
+    background:rgba(0,255,157,.08); color:var(--text2);
+    border:1px solid var(--border);
+    cursor:pointer; transition:all .2s; font-family:'JetBrains Mono',monospace;
+  }
+  .user-chip:hover{ border-color:var(--border-strong); color:var(--accent); }
+  .user-chip .user-dot{
+    width:6px; height:6px; border-radius:50%; background:var(--accent);
+    box-shadow:0 0 8px var(--accent);
+  }
+
   /* Popover */
   .popover{
     position:fixed; z-index:9500;
@@ -729,6 +849,9 @@
         <button class="icon-btn" id="btn-theme" title="Cycle ambient mode">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
         </button>
+        <div class="user-chip" id="user-chip" title="Sign in to Forge" onclick="showAuthModal('login')">
+          <span style="opacity:.5">⌬</span> Sign in
+        </div>
         <div class="history-pill" id="btn-history" onclick="toggleConvPanel()" title="Conversation history">
           <span class="dot"></span><span id="history-label">History</span>
         </div>
@@ -2016,6 +2139,168 @@ function relTime(iso){
 // Init: fetch history count on load (if authed)
 setTimeout(refreshHistoryCount, 1500);
 
+/* ════════════════════════════════════════════════════════
+   AUTH MODAL
+   ════════════════════════════════════════════════════════ */
+
+let _authMode = 'login';
+
+function showAuthModal(mode){
+  _authMode = mode || 'login';
+  _renderAuthModal();
+  document.getElementById('auth-modal').classList.add('visible');
+  setTimeout(()=>document.getElementById('auth-email-input').focus(), 80);
+}
+
+function hideAuthModal(){
+  document.getElementById('auth-modal').classList.remove('visible');
+}
+
+function _renderAuthModal(){
+  const isLogin = _authMode === 'login';
+  document.getElementById('auth-headline').textContent = isLogin ? 'Welcome back' : 'Create your account';
+  document.getElementById('auth-sub').textContent = isLogin
+    ? 'Sign in to access Forge AI and your session history.'
+    : 'Start forging better prompts — free tier includes 20 refinements/month.';
+  document.getElementById('auth-submit-btn').textContent = isLogin ? 'Sign in' : 'Create account';
+  document.getElementById('auth-toggle-link').textContent = isLogin ? 'Create one free' : 'Sign in instead';
+  document.getElementById('auth-toggle-pre').textContent = isLogin ? 'No account?' : 'Already have one?';
+  _clearAuthError();
+}
+
+function _setAuthError(msg){
+  const el = document.getElementById('auth-error-msg');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+function _clearAuthError(){
+  const el = document.getElementById('auth-error-msg');
+  el.textContent = '';
+  el.classList.remove('visible');
+}
+
+async function _submitAuth(){
+  const email = document.getElementById('auth-email-input').value.trim();
+  const password = document.getElementById('auth-password-input').value;
+  _clearAuthError();
+  if(!email || !password){ _setAuthError('Please enter your email and password.'); return; }
+  if(_authMode === 'signup' && password.length < 8){ _setAuthError('Password must be at least 8 characters.'); return; }
+
+  const btn = document.getElementById('auth-submit-btn');
+  btn.disabled = true;
+  btn.textContent = _authMode === 'login' ? 'Signing in…' : 'Creating account…';
+
+  const endpoint = _authMode === 'login' ? '/api/auth/login' : '/api/auth/signup';
+  try {
+    const r = await _origFetch(endpoint, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const data = await r.json();
+    if(!r.ok){
+      _setAuthError(data.detail || 'Something went wrong.');
+      btn.disabled = false;
+      btn.textContent = _authMode === 'login' ? 'Sign in' : 'Create account';
+      return;
+    }
+    // Store token
+    localStorage.setItem('forge_token', data.token);
+    localStorage.setItem('forge_user_email', data.user.email);
+    hideAuthModal();
+    _updateUserChip(data.user.email, data.user.tier);
+    refreshHistoryCount();
+    logLine('info', `auth · signed in as ${data.user.email}`);
+  } catch(e){
+    _setAuthError('Network error — is the server running?');
+    btn.disabled = false;
+    btn.textContent = _authMode === 'login' ? 'Sign in' : 'Create account';
+  }
+}
+
+function _signOut(){
+  localStorage.removeItem('forge_token');
+  localStorage.removeItem('forge_user_email');
+  sessionStorage.removeItem('forge_token');
+  activeSessionId = null;
+  _updateUserChip(null, null);
+  updateHistoryLabel(0);
+  logLine('info', 'auth · signed out');
+  showAuthModal('login');
+}
+
+function _updateUserChip(email, tier){
+  const chip = document.getElementById('user-chip');
+  if(!chip) return;
+  if(email){
+    const short = email.length > 18 ? email.split('@')[0] : email;
+    chip.innerHTML = `<span class="user-dot"></span><span>${short}</span><span style="color:var(--text3);font-size:10px;margin-left:2px">${tier==='paid'?'★':''}</span>`;
+    chip.title = `Signed in as ${email} · Click to sign out`;
+    chip.onclick = ()=>{
+      if(confirm(`Sign out of ${email}?`)) _signOut();
+    };
+  } else {
+    chip.innerHTML = `<span style="opacity:.5">⌬</span> Sign in`;
+    chip.title = 'Sign in to Forge';
+    chip.onclick = ()=> showAuthModal('login');
+  }
+}
+
+// Keyboard submit on auth inputs
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Enter' && document.getElementById('auth-modal').classList.contains('visible')){
+    _submitAuth();
+  }
+  if(e.key === 'Escape' && document.getElementById('auth-modal').classList.contains('visible')){
+    // Only allow closing if already authed
+    if(getAuthToken()) hideAuthModal();
+  }
+});
+
+// Init auth state on load
+(function initAuth(){
+  const tok = getAuthToken();
+  const email = localStorage.getItem('forge_user_email');
+  if(tok && email){
+    _updateUserChip(email, null);
+    // Verify token is still valid
+    _origFetch('/api/auth/me', { headers: authHeaders() })
+      .then(r=>{ if(r.ok) return r.json(); throw new Error(); })
+      .then(u=>{ _updateUserChip(u.email, u.tier); })
+      .catch(()=>{
+        localStorage.removeItem('forge_token');
+        localStorage.removeItem('forge_user_email');
+        _updateUserChip(null, null);
+        showAuthModal('login');
+      });
+  } else {
+    showAuthModal('login');
+  }
+})();
+
 </script>
+
+<!-- AUTH MODAL -->
+<div id="auth-modal">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">⌬</div>
+      <div class="auth-logo-text">FORGE</div>
+    </div>
+    <div class="auth-headline" id="auth-headline">Welcome back</div>
+    <div class="auth-sub" id="auth-sub">Sign in to access Forge AI and your session history.</div>
+    <label class="auth-label" for="auth-email-input">Email</label>
+    <input class="auth-input" id="auth-email-input" type="email" placeholder="you@example.com" autocomplete="email" />
+    <label class="auth-label" for="auth-password-input">Password</label>
+    <input class="auth-input" id="auth-password-input" type="password" placeholder="••••••••" autocomplete="current-password" />
+    <button class="auth-submit" id="auth-submit-btn" onclick="_submitAuth()">Sign in</button>
+    <div class="auth-error" id="auth-error-msg"></div>
+    <div class="auth-footer">
+      <span id="auth-toggle-pre">No account?</span>
+      <a href="#" id="auth-toggle-link" onclick="event.preventDefault(); _authMode=_authMode==='login'?'signup':'login'; _renderAuthModal();">Create one free</a>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
