@@ -167,126 +167,6 @@
   .brand{cursor:pointer}
   .brand:hover .brand-name{filter:brightness(1.15)}
 
-  /* ── Auth Modal ── */
-  #auth-modal{
-    display:none; position:fixed; inset:0; z-index:10000;
-    background:rgba(5,6,15,.88);
-    backdrop-filter:blur(18px) saturate(120%);
-    -webkit-backdrop-filter:blur(18px) saturate(120%);
-    align-items:center; justify-content:center;
-  }
-  #auth-modal.visible{ display:flex; animation:authFadeIn .3s ease; }
-  @keyframes authFadeIn{ from{opacity:0; transform:scale(.96)} to{opacity:1; transform:scale(1)} }
-  .auth-box{
-    background:var(--bg2);
-    border:1px solid rgba(0,255,157,.18);
-    border-radius:20px;
-    padding:40px 36px 32px;
-    width:400px; max-width:92vw;
-    box-shadow:0 32px 80px rgba(0,0,0,.6), 0 0 80px rgba(0,255,157,.06);
-    position:relative;
-  }
-  .auth-box::before{
-    content:''; position:absolute; inset:-1px; border-radius:21px;
-    background:linear-gradient(135deg, rgba(0,255,157,.2), rgba(0,212,255,.1), transparent 60%);
-    z-index:-1; pointer-events:none;
-  }
-  .auth-logo{
-    display:flex; align-items:center; gap:12px; margin-bottom:28px;
-  }
-  .auth-logo-icon{
-    width:40px; height:40px; border-radius:10px;
-    background:linear-gradient(135deg,#00ff9d,#00d4ff);
-    display:flex; align-items:center; justify-content:center;
-    font-size:20px; font-weight:900; color:#001a10;
-    box-shadow:0 6px 20px rgba(0,255,157,.35);
-  }
-  .auth-logo-text{
-    font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700;
-    background:linear-gradient(90deg,#fff,#00ff9d);
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  }
-  .auth-headline{
-    font-size:22px; font-weight:700; color:var(--text);
-    margin-bottom:6px; font-family:'Space Grotesk',sans-serif;
-  }
-  .auth-sub{
-    font-size:13px; color:var(--text3); margin-bottom:28px; line-height:1.5;
-  }
-  .auth-label{
-    display:block; font-size:11px; font-weight:600; letter-spacing:.06em;
-    color:var(--text3); text-transform:uppercase; margin-bottom:7px;
-  }
-  .auth-input{
-    width:100%; padding:12px 14px; margin-bottom:16px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    background:rgba(255,255,255,.04);
-    color:var(--text); font-family:'Inter',sans-serif; font-size:14px;
-    outline:none; transition:border-color .2s, box-shadow .2s;
-  }
-  .auth-input:focus{
-    border-color:var(--border-strong);
-    box-shadow:0 0 0 3px rgba(0,255,157,.1);
-  }
-  .auth-input::placeholder{ color:var(--text3); }
-  .auth-submit{
-    width:100%; padding:13px;
-    background:linear-gradient(135deg,#00ff9d,#00d4ff);
-    color:#001a10; border:none; border-radius:10px;
-    font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:700;
-    letter-spacing:.03em; cursor:pointer;
-    box-shadow:0 8px 24px rgba(0,255,157,.3);
-    transition:transform .15s, box-shadow .2s;
-    position:relative; overflow:hidden;
-  }
-  .auth-submit::before{
-    content:''; position:absolute; inset:0;
-    background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
-    transform:translateX(-100%); transition:transform .4s ease;
-  }
-  .auth-submit:hover::before{ transform:translateX(100%); }
-  .auth-submit:hover{ transform:translateY(-1px); box-shadow:0 12px 32px rgba(0,255,157,.4); }
-  .auth-submit:active{ transform:translateY(0); }
-  .auth-submit:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
-  .auth-error{
-    font-size:12px; color:var(--danger); min-height:18px;
-    margin-top:10px; text-align:center;
-    background:rgba(255,93,122,.08); border-radius:6px;
-    padding:0; transition:padding .2s, opacity .2s; opacity:0;
-  }
-  .auth-error.visible{ padding:8px 12px; opacity:1; }
-  .auth-footer{
-    text-align:center; font-size:12px; color:var(--text3);
-    margin-top:20px;
-  }
-  .auth-footer a{
-    color:var(--accent); text-decoration:none; font-weight:600;
-    transition:opacity .15s;
-  }
-  .auth-footer a:hover{ opacity:.8; }
-  .auth-divider{
-    display:flex; align-items:center; gap:12px; margin:20px 0;
-  }
-  .auth-divider::before,.auth-divider::after{
-    content:''; flex:1; height:1px; background:var(--border);
-  }
-  .auth-divider span{ font-size:11px; color:var(--text3); white-space:nowrap; }
-  /* User menu in header */
-  .user-chip{
-    display:inline-flex; align-items:center; gap:8px;
-    padding:6px 12px; border-radius:999px;
-    font-size:11px; font-weight:600;
-    background:rgba(0,255,157,.08); color:var(--text2);
-    border:1px solid var(--border);
-    cursor:pointer; transition:all .2s; font-family:'JetBrains Mono',monospace;
-  }
-  .user-chip:hover{ border-color:var(--border-strong); color:var(--accent); }
-  .user-chip .user-dot{
-    width:6px; height:6px; border-radius:50%; background:var(--accent);
-    box-shadow:0 0 8px var(--accent);
-  }
-
   /* Popover */
   .popover{
     position:fixed; z-index:9500;
@@ -316,126 +196,7 @@
 
   .console-head .ghost-btn{padding:4px 9px; font-size:11px}
   .spark .ghost-btn{padding:4px 9px; font-size:10px; margin-left:auto}
-  /* ── Conversation Panel ── */
-  .conv-trigger-btn{
-    position:fixed; bottom:28px; right:28px; z-index:500;
-    background:linear-gradient(135deg,#00ff9d,#00d4ff);
-    color:#001a10; border:none; border-radius:999px;
-    padding:10px 18px; font-size:12px; font-weight:700;
-    display:flex; align-items:center; gap:7px; cursor:pointer;
-    box-shadow:0 8px 28px rgba(0,255,157,.35);
-    transition:transform .15s, box-shadow .2s;
-  }
-  .conv-trigger-btn:hover{transform:translateY(-2px); box-shadow:0 14px 36px rgba(0,255,157,.5)}
-  .conv-trigger-btn.has-badge::after{
-    content:attr(data-count); position:absolute;
-    top:-6px; right:-6px; background:var(--danger);
-    color:#fff; border-radius:999px; font-size:10px;
-    padding:1px 6px; font-weight:700;
-  }
-
-  .conv-panel{
-    position:fixed; bottom:82px; right:28px; z-index:490;
-    width:360px; max-height:calc(100vh - 120px);
-    background:var(--surface); border:1px solid var(--border-strong);
-    border-radius:16px; backdrop-filter:blur(20px);
-    box-shadow:0 30px 60px rgba(0,0,0,.55);
-    display:flex; flex-direction:column; overflow:hidden;
-  }
-  .conv-panel-inner{display:flex; flex-direction:column; height:100%; overflow:hidden}
-  .conv-head{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:12px 16px; border-bottom:1px solid var(--border);
-    font-size:12px; font-weight:600; color:var(--text);
-  }
-  .conv-head-title{display:flex; align-items:center; gap:8px; color:var(--accent)}
-  .conv-sessions,.conv-turns{
-    flex:1; overflow-y:auto; padding:10px;
-    scrollbar-width:thin; scrollbar-color:var(--border) transparent;
-  }
-  .session-item{
-    padding:10px 12px; border-radius:10px; cursor:pointer;
-    border:1px solid var(--border); margin-bottom:6px;
-    background:var(--surface2); transition:all .15s;
-    display:flex; align-items:flex-start; gap:10px;
-  }
-  .session-item:hover{border-color:var(--border-strong); background:var(--accent-soft)}
-  .session-info{flex:1; min-width:0}
-  .session-title{font-size:12px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .session-meta{font-size:10px; color:var(--text3); margin-top:2px; font-family:'JetBrains Mono',monospace}
-  .session-del{color:var(--text3); font-size:14px; cursor:pointer; padding:2px 5px; border-radius:4px; transition:.15s; flex-shrink:0}
-  .session-del:hover{color:var(--danger); background:rgba(255,93,122,.1)}
-  .session-empty{text-align:center; color:var(--text3); font-size:12px; padding:30px 0}
-
-  .turn-item{
-    padding:10px 12px; border-radius:10px;
-    border:1px solid var(--border); margin-bottom:8px;
-    background:var(--surface2);
-  }
-  .turn-num{font-size:9px; font-family:'JetBrains Mono',monospace; color:var(--text3); margin-bottom:4px}
-  .turn-orig{font-size:11px; color:var(--text2); margin-bottom:5px; line-height:1.5}
-  .turn-type-badge{
-    display:inline-block; padding:2px 7px; border-radius:999px;
-    font-size:9px; font-weight:600; letter-spacing:1px; text-transform:uppercase;
-    background:var(--accent-soft); color:var(--accent); border:1px solid var(--border-strong);
-    margin-bottom:6px;
-  }
-  .turn-scores{display:flex; gap:8px; flex-wrap:wrap}
-  .turn-score-chip{
-    font-size:9px; font-family:'JetBrains Mono',monospace;
-    color:var(--text3); background:rgba(255,255,255,.04);
-    border:1px solid var(--border); border-radius:5px; padding:2px 6px;
-  }
-  .turn-score-chip .sv{color:var(--accent); font-weight:600}
-  .turn-use-btn{
-    margin-top:8px; width:100%; padding:5px 0; border-radius:7px;
-    background:transparent; border:1px solid var(--border);
-    color:var(--text3); font-size:10px; cursor:pointer; transition:.15s;
-  }
-  .turn-use-btn:hover{border-color:var(--border-strong); color:var(--accent)}
-
-  .recommend-box{
-    margin-top:10px; border-radius:12px;
-    border:1px solid rgba(179,136,255,.35);
-    background:rgba(179,136,255,.07); padding:14px;
-  }
-  .recommend-head{
-    font-size:11px; font-weight:700; color:var(--accent3);
-    display:flex; align-items:center; gap:6px; margin-bottom:10px;
-  }
-  .rec-rationale{font-size:11px; color:var(--text2); line-height:1.6; margin-bottom:8px}
-  .rec-chips{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px}
-  .rec-chip{
-    font-size:9px; font-weight:600; padding:3px 8px; border-radius:999px;
-    border:1px solid rgba(179,136,255,.4); color:var(--accent3);
-    font-family:'JetBrains Mono',monospace; text-transform:uppercase;
-  }
-  .rec-prompt-box{
-    background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.07);
-    border-radius:8px; padding:10px; font-size:11px; color:var(--text);
-    line-height:1.6; white-space:pre-wrap; font-family:inherit; margin-bottom:8px;
-  }
-  .rec-actions{display:flex; gap:6px}
-  .rec-btn{
-    display:flex; align-items:center; gap:6px;
-    background:rgba(179,136,255,.12); color:var(--accent3);
-    border-color:rgba(179,136,255,.3);
-    width:100%; justify-content:center; margin-top:10px;
-    padding:8px; border-radius:8px;
-  }
-  .rec-btn:hover{background:rgba(179,136,255,.2); border-color:rgba(179,136,255,.5)}
-
-  /* new-session indicator shown in header toolbar */
-  .history-pill{
-    display:inline-flex; align-items:center; gap:6px;
-    padding:6px 12px; border-radius:999px; font-size:11px; font-weight:600;
-    background:rgba(179,136,255,.1); color:var(--accent3);
-    border:1px solid rgba(179,136,255,.25); cursor:pointer;
-    font-family:'JetBrains Mono',monospace; transition:all .2s;
-  }
-  .history-pill:hover{background:rgba(179,136,255,.2); border-color:rgba(179,136,255,.5); transform:translateY(-1px)}
-  .history-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--accent3);box-shadow:0 0 10px var(--accent3); animation:pulse 1.6s ease-in-out infinite}
-
+  @keyframes pulse{50%{opacity:.4}}
   .icon-btn{
     width:36px; height:36px; border-radius:10px;
     background:var(--surface); border:1px solid var(--border);
@@ -849,12 +610,6 @@
         <button class="icon-btn" id="btn-theme" title="Cycle ambient mode">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
         </button>
-        <div class="user-chip" id="user-chip" title="Sign in to Forge" onclick="showAuthModal('login')">
-          <span style="opacity:.5">⌬</span> Sign in
-        </div>
-        <div class="history-pill" id="btn-history" onclick="toggleConvPanel()" title="Conversation history">
-          <span class="dot"></span><span id="history-label">History</span>
-        </div>
       </div>
     </div>
   </header>
@@ -881,6 +636,9 @@
         </div>
         <div class="tab" id="tab-sql" onclick="switchTab(1)" role="tab">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>SQL Sorcerer
+        </div>
+        <div class="tab" id="tab-convo" onclick="switchTab(2)" role="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Conversation Coach
         </div>
       </div>
     </div>
@@ -952,49 +710,70 @@
             <div class="chip" onclick="setSql('Customers who signed up but never made a purchase.')">Inactive users</div>
             <div class="chip" onclick="setSql('Daily active users for the last 30 days as a time series.')">DAU trend</div>
             <div class="chip" onclick="setSql('Find duplicate emails in the users table.')">Duplicates</div>
+        </div>
+
+        <!-- CONVERSATION COACH -->
+        <div id="content-convo" style="display:none">
+          <div class="input-container">
+            <div class="input-header">
+              <div class="input-title"><span class="dotg"></span>Paste your AI conversation — get smart follow-ups</div>
+              <div class="header-actions">
+                <button class="ghost-btn" onclick="loadConvoSample()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Load sample
+                </button>
+                <button class="ghost-btn" onclick="forgetConvo()" id="convo-forget-btn" title="Wipe locally stored conversation">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>Forget
+                </button>
+              </div>
+            </div>
+            <textarea id="convo-input" placeholder="Paste the conversation so far. Format each line as &#10;USER: ...&#10;ASSISTANT: ...&#10;USER: ..."></textarea>
+            <div class="input-footer">
+              <div class="footer-meta">
+                <span class="meta-chip" id="convo-count">0 turns</span>
+                <span class="meta-chip clickable" id="convo-memory-chip" title="Toggle memory">Memory: ON</span>
+                <span><span class="kbd">⌘</span> + <span class="kbd">Enter</span> to coach</span>
+              </div>
+              <button class="analyze-btn" onclick="analyzeConvo()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>SUGGEST FOLLOW-UPS
+              </button>
+            </div>
+          </div>
+          <div class="suggestions">
+            <div class="chip" onclick="document.getElementById('convo-goal').focus()">Set a goal ↓</div>
+          </div>
+          <div class="input-container" style="margin-top:14px">
+            <div class="input-header">
+              <div class="input-title"><span class="dotg"></span>What are you trying to achieve? <span style="color:var(--text3);font-weight:400">(optional)</span></div>
+            </div>
+            <textarea id="convo-goal" style="min-height:64px" placeholder="e.g. Ship a launch plan for next Tuesday with concrete deliverables."></textarea>
+          </div>
+          <div class="input-container" style="margin-top:14px;background:linear-gradient(135deg, rgba(0,255,157,.06), rgba(0,212,255,.05));border-color:var(--border-strong)">
+            <div class="input-header">
+              <div class="input-title"><span class="dotg"></span>✦ Use Forge inside every AI chat</div>
+            </div>
+            <div style="padding:0 4px 6px;color:var(--text2);font-size:13px;line-height:1.6">
+              Install the Forge browser extension to refine prompts and get follow-up suggestions directly inside ChatGPT, Claude, Gemini, Perplexity, Copilot, DeepSeek, Grok, and any other AI chat. A floating ✦ pill appears whenever you focus a prompt input. Conversation memory stays in the active tab and is wiped when you close it (or toggle memory off).
+              <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+                <a href="/forge-extension.zip" download class="analyze-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download extension (.zip)
+                </a>
+                <span style="color:var(--text3);font-size:12px;align-self:center">Then: chrome://extensions → Developer mode → Load unpacked.</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
     </div>
 
     <div id="results"></div>
-
-    <!-- CONVERSATION HISTORY PANEL -->
-    <div class="conv-panel" id="conv-panel" style="display:none">
-      <div class="conv-panel-inner">
-        <div class="conv-head">
-          <span class="conv-head-title">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Conversation
-          </span>
-          <button class="ghost-btn" onclick="closeConvPanel()">✕</button>
-        </div>
-        <div id="conv-sessions-list" class="conv-sessions"></div>
-        <div id="conv-turns-view" class="conv-turns" style="display:none">
-          <button class="ghost-btn" style="margin-bottom:10px" onclick="showSessionsList()">← Back to sessions</button>
-          <div id="conv-turns-list"></div>
-          <div id="recommend-box" class="recommend-box" style="display:none">
-            <div class="recommend-head">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-              Next Best Prompt
-            </div>
-            <div id="recommend-body"></div>
-          </div>
-          <button class="ghost-btn rec-btn" id="btn-recommend" onclick="loadRecommendation()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            Recommend Next Prompt
-          </button>
-        </div>
-      </div>
-    </div>
   </main>
 </div>
 
 <div class="toast" id="toast"><span class="ok">OK</span><span id="toast-msg">Copied to clipboard</span></div>
 
 <script>
-// Capture native fetch immediately before any patches
-const _origFetch = window.fetch.bind(window);
 /* ---------- PARTICLE BACKGROUND ---------- */
 (function(){
   const c = document.getElementById('particles');
@@ -1060,25 +839,6 @@ window.addEventListener('load', () => {
       document.getElementById('main-app').style.display = 'flex';
       startLiveLoop();
       /* manual mode: no auto-demo */
-
-      // ── Init auth after preloader ──
-      const tok = getAuthToken();
-      const email = localStorage.getItem('forge_user_email');
-      if(tok && email){
-        _updateUserChip(email, null);
-        _origFetch('/api/auth/me', { headers: authHeaders() })
-          .then(r=>{ if(r.ok) return r.json(); throw new Error(); })
-          .then(u=>{ _updateUserChip(u.email, u.tier); refreshHistoryCount(); })
-          .catch(()=>{
-            localStorage.removeItem('forge_token');
-            localStorage.removeItem('forge_user_email');
-            _updateUserChip(null, null);
-            showAuthModal('login');
-          });
-      } else {
-        showAuthModal('login');
-      }
-
     }, 900);
   }, 2000);
 });
@@ -1166,10 +926,13 @@ function switchTab(n){
   activeTab = n;
   document.getElementById('tab-prompt').classList.toggle('active', n===0);
   document.getElementById('tab-sql').classList.toggle('active', n===1);
+  document.getElementById('tab-convo').classList.toggle('active', n===2);
   document.getElementById('content-prompt').style.display = n===0?'block':'none';
   document.getElementById('content-sql').style.display    = n===1?'block':'none';
+  document.getElementById('content-convo').style.display  = n===2?'block':'none';
   resetResults();
-  logLine('info', n===0 ? 'switched to · prompt forge' : 'switched to · sql sorcerer');
+  const labels = ['prompt forge','sql sorcerer','conversation coach'];
+  logLine('info', 'switched to · ' + labels[n]);
 }
 
 /* ---------- HELPERS ---------- */
@@ -1212,7 +975,9 @@ function updateCount(which){
 document.addEventListener('keydown', (e)=>{
   if((e.metaKey||e.ctrlKey) && e.key==='Enter'){
     e.preventDefault();
-    activeTab===0 ? analyzePrompt() : analyzeSql();
+    if(activeTab===0) analyzePrompt();
+    else if(activeTab===1) analyzeSql();
+    else analyzeConvo();
   }
   if(e.key === 'Escape'){ cancelInFlight(); }
 });
@@ -1850,458 +1615,164 @@ document.getElementById('sql-count').addEventListener('click', e=>{ e.stopPropag
 (function(){var b=document.getElementById('btn-clear-log'); if(b) b.addEventListener('click', ()=>{ var bd=document.getElementById('console-body'); if(bd) bd.innerHTML=''; });})();
 (function(){var b=document.getElementById('btn-pause-stream'); if(b) b.addEventListener('click', e=>{ streamPaused = !streamPaused; e.target.textContent = streamPaused?'Resume':'Pause'; });})();
 
-/* ════════════════════════════════════════════════════════
-   CONVERSATION TRACKING & NEXT-BEST-PROMPT
-   ════════════════════════════════════════════════════════ */
+/* ---------- CONVERSATION COACH ---------- */
+const CONVO_KEY = 'forge.convo.v1';
+let convoMemory = (localStorage.getItem('forge.memory') !== '0');
 
-// State
-let convPanelOpen    = false;
-let activeSessionId  = null;    // session currently being built
-let viewingSessionId = null;    // session open in history view
-
-// ── Auth token helper ────────────────────────────────────
-function getAuthToken(){
-  // Grab from sessionStorage if set during login/signup (existing auth flow stores it)
-  return sessionStorage.getItem('forge_token') || localStorage.getItem('forge_token') || '';
-}
-function authHeaders(){
-  const t = getAuthToken();
-  return t ? { 'Content-Type':'application/json', 'Authorization':'Bearer '+t } : { 'Content-Type':'application/json' };
-}
-
-// Patch existing fetch calls to include session_id
-const _origAnalyzePrompt = analyzePrompt;
-window.analyzePrompt = async function(){
-  // Delegate but we need to intercept the fetch — we monkey-patch below instead
-  return _origAnalyzePrompt();
-};
-
-// ── Patch the forge-prompt fetch to inject session_id + auth ─
-// We override the global fetch for /api/forge-prompt so we don't
-// duplicate all the streaming logic above.
-window.fetch = async function(url, opts = {}){
-  if(typeof url === 'string' && url.includes('/api/forge-prompt')){
-    try {
-      const body = JSON.parse(opts.body || '{}');
-      if(activeSessionId) body.session_id = activeSessionId;
-      opts = { ...opts, body: JSON.stringify(body) };
-      // inject auth if available
-      const t = getAuthToken();
-      if(t) opts.headers = { ...(opts.headers||{}), 'Authorization':'Bearer '+t };
-    } catch(e){}
-  } else if(typeof url === 'string' && url.includes('/api/')){
-    const t = getAuthToken();
-    if(t) opts.headers = { ...(opts.headers||{}), 'Authorization':'Bearer '+t };
+function parseConvo(raw){
+  const lines = raw.split(/\n+/);
+  const out = [];
+  let cur = null;
+  const re = /^\s*(USER|ASSISTANT|AI|HUMAN|ME|YOU|GPT|CLAUDE|MODEL)\s*[:\-]\s*(.*)$/i;
+  for(const ln of lines){
+    const m = ln.match(re);
+    if(m){
+      if(cur) out.push(cur);
+      const role = /USER|HUMAN|ME|YOU/i.test(m[1]) ? 'user' : 'assistant';
+      cur = { role, content: m[2] };
+    } else if(cur){
+      cur.content += '\n' + ln;
+    } else if(ln.trim()){
+      cur = { role: 'user', content: ln };
+    }
   }
-  return _origFetch.call(this, url, opts);
-};
+  if(cur) out.push(cur);
+  return out.map(m => ({ role: m.role, content: m.content.trim() })).filter(m => m.content);
+}
 
-// Also listen for session events emitted by the SSE stream
-// We intercept inside the existing analyzePrompt by patching the event loop
-// via a custom event approach — inject listener on custom event fired from stream
-document.addEventListener('forge:session', e=>{
-  const { session_id, turn_index } = e.detail;
-  if(!activeSessionId){
-    activeSessionId = session_id;
-    logLine('info', `session · ${session_id} · turn ${turn_index+1}`);
-  }
-  refreshHistoryCount();
+function updateConvoCount(){
+  const msgs = parseConvo(document.getElementById('convo-input').value);
+  document.getElementById('convo-count').textContent = `${msgs.length} turn${msgs.length===1?'':'s'}`;
+}
+
+function loadConvoSample(){
+  document.getElementById('convo-input').value =
+`USER: I'm building a launch plan for a new productivity app aimed at remote teams.
+ASSISTANT: Great. I'd recommend starting with a positioning statement and identifying your top 3 differentiators. Have you decided on a core hook?
+USER: Not yet — we're torn between "deep focus rituals" and "async-first standups".`;
+  document.getElementById('convo-goal').value = 'Pick a hook and ship a one-week launch plan.';
+  updateConvoCount();
+  if(convoMemory) localStorage.setItem(CONVO_KEY, document.getElementById('convo-input').value);
+  toast('Sample loaded');
+}
+
+function forgetConvo(){
+  document.getElementById('convo-input').value = '';
+  document.getElementById('convo-goal').value = '';
+  localStorage.removeItem(CONVO_KEY);
+  updateConvoCount();
+  resetResults();
+  toast('Conversation forgotten');
+  logLine('info', 'memory wiped · conversation cleared');
+}
+
+function setMemoryUI(){
+  const chip = document.getElementById('convo-memory-chip');
+  chip.textContent = 'Memory: ' + (convoMemory ? 'ON' : 'OFF');
+  chip.style.color = convoMemory ? 'var(--accent)' : 'var(--danger)';
+}
+setMemoryUI();
+document.getElementById('convo-memory-chip').addEventListener('click', ()=>{
+  convoMemory = !convoMemory;
+  localStorage.setItem('forge.memory', convoMemory ? '1' : '0');
+  if(!convoMemory) localStorage.removeItem(CONVO_KEY);
+  setMemoryUI();
+  toast('Memory ' + (convoMemory ? 'enabled' : 'disabled — wiped'));
 });
 
-// Patch stream processing: detect 'session' SSE event and dispatch DOM event
-// We do this by adding an afterburner after each SSE parse in the reader loop.
-// Easiest: wrap JSON.parse only for session events
-const _origJSONParse = JSON.parse;
-JSON.parse = function(text){
-  const obj = _origJSONParse.apply(this, arguments);
-  if(obj && obj.type === 'session' && obj.session_id){
-    setTimeout(()=>document.dispatchEvent(new CustomEvent('forge:session', { detail: obj })), 0);
-  }
-  return obj;
-};
+(function restoreConvo(){
+  if(!convoMemory) return;
+  const saved = localStorage.getItem(CONVO_KEY);
+  if(saved){ document.getElementById('convo-input').value = saved; updateConvoCount(); }
+})();
 
-// ── Toggle panel ─────────────────────────────────────────
-function toggleConvPanel(){
-  convPanelOpen = !convPanelOpen;
-  const panel = document.getElementById('conv-panel');
-  panel.style.display = convPanelOpen ? 'flex' : 'none';
-  if(convPanelOpen){ showSessionsList(); }
-}
-function closeConvPanel(){
-  convPanelOpen = false;
-  document.getElementById('conv-panel').style.display = 'none';
-}
+document.getElementById('convo-input').addEventListener('input', ()=>{
+  updateConvoCount();
+  if(convoMemory) localStorage.setItem(CONVO_KEY, document.getElementById('convo-input').value);
+});
 
-// ── Sessions list ────────────────────────────────────────
-async function showSessionsList(){
-  document.getElementById('conv-sessions-list').style.display = 'block';
-  document.getElementById('conv-turns-view').style.display = 'none';
-  viewingSessionId = null;
-  await renderSessionsList();
-}
+window.addEventListener('beforeunload', ()=>{
+  if(!convoMemory) localStorage.removeItem(CONVO_KEY);
+});
 
-async function renderSessionsList(){
-  const list = document.getElementById('conv-sessions-list');
-  list.innerHTML = '<div class="session-empty">Loading…</div>';
-  try {
-    const r = await _origFetch('/api/sessions', { headers: authHeaders() });
-    if(!r.ok){ list.innerHTML = '<div class="session-empty">Sign in to view history</div>'; return; }
-    const sessions = await r.json();
-    if(!sessions.length){
-      list.innerHTML = '<div class="session-empty">No conversations yet.<br/>Forge a prompt to start one.</div>';
-      return;
-    }
-    list.innerHTML = sessions.map(s=>`
-      <div class="session-item" data-id="${s.id}">
-        <div class="session-info">
-          <div class="session-title">${escHtml(s.title || 'Untitled')}</div>
-          <div class="session-meta">${s.turn_count} turn${s.turn_count!==1?'s':''} · ${relTime(s.updated_at)}</div>
-        </div>
-        <span class="session-del" title="Delete" onclick="event.stopPropagation();deleteSession('${s.id}')">✕</span>
-      </div>`).join('');
-    list.querySelectorAll('.session-item').forEach(el=>{
-      el.addEventListener('click', ()=>openSession(el.dataset.id));
-    });
-    updateHistoryLabel(sessions.length);
-  } catch(e){
-    list.innerHTML = '<div class="session-empty">Could not load history</div>';
-  }
-}
+async function analyzeConvo(){
+  const raw = document.getElementById('convo-input').value.trim();
+  const goal = document.getElementById('convo-goal').value.trim();
+  if(!raw){ toast('Paste a conversation first'); return; }
+  const messages = parseConvo(raw);
+  if(!messages.length){ toast('Could not detect any turns'); return; }
 
-async function deleteSession(id){
-  if(!confirm('Delete this conversation?')) return;
-  await _origFetch(`/api/sessions/${id}`, { method:'DELETE', headers: authHeaders() });
-  if(activeSessionId === id) activeSessionId = null;
-  await renderSessionsList();
-  toast('Conversation deleted');
-  refreshHistoryCount();
-}
-
-// ── Session detail / turns ───────────────────────────────
-async function openSession(id){
-  viewingSessionId = id;
-  document.getElementById('conv-sessions-list').style.display = 'none';
-  document.getElementById('conv-turns-view').style.display = 'block';
-  document.getElementById('recommend-box').style.display = 'none';
-  document.getElementById('btn-recommend').textContent = '⚡ Recommend Next Prompt';
-
-  const turnsList = document.getElementById('conv-turns-list');
-  turnsList.innerHTML = '<div class="session-empty">Loading…</div>';
-
-  try {
-    const r = await _origFetch(`/api/sessions/${id}`, { headers: authHeaders() });
-    if(!r.ok){ turnsList.innerHTML = '<div class="session-empty">Error loading session</div>'; return; }
-    const { session, turns } = await r.json();
-
-    turnsList.innerHTML = turns.map((t,i)=>`
-      <div class="turn-item">
-        <div class="turn-num">TURN ${i+1} · ${relTime(t.created_at)}</div>
-        <span class="turn-type-badge">${t.prompt_type||'?'}</span>
-        <div class="turn-orig">${escHtml((t.original_prompt||'').slice(0,160))}${(t.original_prompt||'').length>160?'…':''}</div>
-        <div class="turn-scores">
-          <div class="turn-score-chip">clarity <span class="sv">${t.score_clarity??'—'}</span></div>
-          <div class="turn-score-chip">specificity <span class="sv">${t.score_specificity??'—'}</span></div>
-          <div class="turn-score-chip">tone <span class="sv">${t.score_tone??'—'}</span></div>
-          <div class="turn-score-chip">overall <span class="sv">${t.score_overall??'—'}</span></div>
-        </div>
-        ${t.improved_prompt ? `<button class="turn-use-btn" onclick="useImproved(${JSON.stringify(t.improved_prompt)})">↑ Use this improved prompt</button>` : ''}
-      </div>`).join('') || '<div class="session-empty">No turns yet</div>';
-  } catch(e){
-    turnsList.innerHTML = '<div class="session-empty">Failed to load turns</div>';
-  }
-}
-
-function useImproved(text){
-  closeConvPanel();
-  activeSessionId = viewingSessionId;  // continue in same session
-  document.getElementById('prompt-input').value = text;
-  updateCount('prompt');
-  if(activeTab !== 0) switchTab(0);
-  toast('Improved prompt loaded — ready to forge');
-  logLine('info', 'loaded improved prompt from history');
-}
-
-// ── Next-best-prompt recommendation ─────────────────────
-async function loadRecommendation(){
-  if(!viewingSessionId) return;
-  const box = document.getElementById('recommend-box');
-  const body = document.getElementById('recommend-body');
-  const btn  = document.getElementById('btn-recommend');
-  btn.textContent = '⏳ Analysing…';
-  btn.disabled = true;
-  box.style.display = 'none';
-
-  try {
-    const r = await _origFetch(`/api/sessions/${viewingSessionId}/recommend`, {
-      method:'POST', headers: authHeaders()
-    });
-    if(!r.ok){
-      const err = await r.json().catch(()=>({detail:'Error'}));
-      toast('Recommendation failed: ' + (err.detail||r.status));
-      btn.textContent = '⚡ Recommend Next Prompt'; btn.disabled = false;
-      return;
-    }
-    const rec = await r.json();
-    body.innerHTML = `
-      <div class="rec-rationale">${escHtml(rec.rationale||'')}</div>
-      <div class="rec-chips">
-        <span class="rec-chip">Focus: ${escHtml(rec.focus_area||'?')}</span>
-        <span class="rec-chip">${escHtml(rec.predicted_improvement||'')}</span>
+  cancelInFlight();
+  busy = true;
+  document.getElementById('status-ai').textContent = 'AI Working';
+  document.getElementById('results').innerHTML = `
+    <div class="result-card">
+      <div class="result-head">
+        <div class="result-title">Follow-up Suggestions <span class="badge live">THINKING</span></div>
       </div>
-      <div class="rec-prompt-box">${escHtml(rec.recommendation||'')}</div>
-      <div class="rec-actions">
-        <button class="ghost-btn" style="flex:1" onclick="useRecommendation(${JSON.stringify(rec.recommendation||'')})">
-          ↑ Use this prompt
-        </button>
-        <button class="ghost-btn" onclick="copyText(${JSON.stringify(rec.recommendation||'')}, 'Recommendation copied')">
-          Copy
-        </button>
-      </div>`;
-    box.style.display = 'block';
-    btn.textContent = '↺ Refresh Recommendation'; btn.disabled = false;
-    logLine('ok', `recommendation · focus:${rec.focus_area} · ${rec.predicted_improvement}`);
-  } catch(e){
-    toast('Error: ' + e.message);
-    btn.textContent = '⚡ Recommend Next Prompt'; btn.disabled = false;
-  }
-}
+      <div class="result-body">
+        ${workingHTML("Reading the conversation")}
+        <div id="convo-suggestions" style="margin-top:18px;display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+    </div>`;
+  logLine('info', `coach · ${messages.length} turns · goal:${goal?'set':'none'}`);
 
-function useRecommendation(text){
-  closeConvPanel();
-  activeSessionId = viewingSessionId;
-  document.getElementById('prompt-input').value = text;
-  updateCount('prompt');
-  if(activeTab !== 0) switchTab(0);
-  toast('Recommended prompt loaded — forge it!');
-  logLine('info', 'loaded ai recommendation into prompt input');
-}
-
-// ── "Continue session" button after each forge ───────────
-// We inject a small CTA below the result card after a successful forge.
-document.addEventListener('forge:session', e=>{
-  const { session_id } = e.detail;
-  // Only add once per result
-  if(document.getElementById('conv-continue-cta')) return;
-  const results = document.getElementById('results');
-  if(!results) return;
-  const cta = document.createElement('div');
-  cta.id = 'conv-continue-cta';
-  cta.style.cssText = 'display:flex;gap:8px;max-width:1180px;margin:0 auto 18px;';
-  cta.innerHTML = `
-    <button class="ghost-btn" style="flex:1" onclick="continueSession()">
-      ↩ Continue this session with a follow-up prompt
-    </button>
-    <button class="ghost-btn" onclick="startNewSession()">
-      + New session
-    </button>
-    <button class="ghost-btn" onclick="viewAndRecommend('${session_id}')">
-      ⚡ Get next-best-prompt recommendation
-    </button>`;
-  results.after(cta);
-});
-
-function continueSession(){
-  // Keep activeSessionId, clear input, focus
-  document.getElementById('prompt-input').value = '';
-  updateCount('prompt');
-  if(activeTab !== 0) switchTab(0);
-  document.getElementById('prompt-input').focus();
-  const cta = document.getElementById('conv-continue-cta');
-  if(cta) cta.remove();
-  resetResults();
-  toast('Continue typing your next prompt in this session');
-}
-
-function startNewSession(){
-  activeSessionId = null;
-  document.getElementById('prompt-input').value = '';
-  updateCount('prompt');
-  const cta = document.getElementById('conv-continue-cta');
-  if(cta) cta.remove();
-  resetResults();
-  if(activeTab !== 0) switchTab(0);
-  toast('New session started');
-}
-
-async function viewAndRecommend(id){
-  convPanelOpen = true;
-  document.getElementById('conv-panel').style.display = 'flex';
-  await openSession(id);
-  loadRecommendation();
-}
-
-// ── History pill count ───────────────────────────────────
-async function refreshHistoryCount(){
   try {
-    const r = await _origFetch('/api/sessions', { headers: authHeaders() });
-    if(!r.ok) return;
-    const sessions = await r.json();
-    updateHistoryLabel(sessions.length);
-  } catch(e){}
-}
-
-function updateHistoryLabel(count){
-  const lbl = document.getElementById('history-label');
-  if(lbl) lbl.textContent = count > 0 ? `History (${count})` : 'History';
-}
-
-// ── Utilities ────────────────────────────────────────────
-function relTime(iso){
-  if(!iso) return '';
-  const d = new Date(iso.replace(' ','T')+'Z');
-  const s = Math.floor((Date.now()-d)/1000);
-  if(s<60) return 'just now';
-  if(s<3600) return `${Math.floor(s/60)}m ago`;
-  if(s<86400) return `${Math.floor(s/3600)}h ago`;
-  return `${Math.floor(s/86400)}d ago`;
-}
-
-// Init: fetch history count on load (if authed)
-setTimeout(refreshHistoryCount, 1500);
-
-/* ════════════════════════════════════════════════════════
-   AUTH MODAL
-   ════════════════════════════════════════════════════════ */
-
-let _authMode = 'login';
-
-function showAuthModal(mode){
-  _authMode = mode || 'login';
-  _renderAuthModal();
-  document.getElementById('auth-modal').classList.add('visible');
-  setTimeout(()=>document.getElementById('auth-email-input').focus(), 80);
-}
-
-function hideAuthModal(){
-  document.getElementById('auth-modal').classList.remove('visible');
-}
-
-function _renderAuthModal(){
-  const isLogin = _authMode === 'login';
-  document.getElementById('auth-headline').textContent = isLogin ? 'Welcome back' : 'Create your account';
-  document.getElementById('auth-sub').textContent = isLogin
-    ? 'Sign in to access Forge AI and your session history.'
-    : 'Start forging better prompts — free tier includes 20 refinements/month.';
-  document.getElementById('auth-submit-btn').textContent = isLogin ? 'Sign in' : 'Create account';
-  document.getElementById('auth-toggle-link').textContent = isLogin ? 'Create one free' : 'Sign in instead';
-  document.getElementById('auth-toggle-pre').textContent = isLogin ? 'No account?' : 'Already have one?';
-  _clearAuthError();
-}
-
-function _setAuthError(msg){
-  const el = document.getElementById('auth-error-msg');
-  el.textContent = msg;
-  el.classList.add('visible');
-}
-function _clearAuthError(){
-  const el = document.getElementById('auth-error-msg');
-  el.textContent = '';
-  el.classList.remove('visible');
-}
-
-async function _submitAuth(){
-  const email = document.getElementById('auth-email-input').value.trim();
-  const password = document.getElementById('auth-password-input').value;
-  _clearAuthError();
-  if(!email || !password){ _setAuthError('Please enter your email and password.'); return; }
-  if(_authMode === 'signup' && password.length < 8){ _setAuthError('Password must be at least 8 characters.'); return; }
-
-  const btn = document.getElementById('auth-submit-btn');
-  btn.disabled = true;
-  btn.textContent = _authMode === 'login' ? 'Signing in…' : 'Creating account…';
-
-  const endpoint = _authMode === 'login' ? '/api/auth/login' : '/api/auth/signup';
-  try {
-    const r = await _origFetch(endpoint, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({email, password})
+    const r = await fetch('/api/follow-ups', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ messages, goal: goal || null })
     });
+    if(!r.ok) throw new Error('API ' + r.status);
     const data = await r.json();
-    if(!r.ok){
-      _setAuthError(data.detail || 'Something went wrong.');
-      btn.disabled = false;
-      btn.textContent = _authMode === 'login' ? 'Sign in' : 'Create account';
-      return;
+    const w = document.querySelector('.working'); if(w) w.classList.add('done');
+    const target = document.getElementById('convo-suggestions');
+    const sugs = (data.suggestions || []);
+    if(!sugs.length){
+      target.innerHTML = '<div style="color:var(--danger)">No suggestions returned. Try again or simplify the conversation.</div>';
+    } else {
+      target.innerHTML = sugs.map((s,i)=>`
+        <div class="info-box" style="cursor:pointer" data-i="${i}">
+          <h4 style="color:var(--accent)">${escHtml(s.label || ('Suggestion ' + (i+1)))}</h4>
+          <p style="margin-top:6px;line-height:1.6;color:var(--text)">${escHtml(s.prompt || '')}</p>
+          ${s.why ? `<p style="margin-top:8px;font-size:12px;color:var(--text2);font-style:italic">${escHtml(s.why)}</p>` : ''}
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="ghost-btn" data-act="copy" data-i="${i}">Copy prompt</button>
+            <button class="ghost-btn" data-act="append" data-i="${i}">Append to conversation</button>
+          </div>
+        </div>
+      `).join('');
+      target.querySelectorAll('button[data-act]').forEach(btn=>{
+        btn.addEventListener('click', e=>{
+          e.stopPropagation();
+          const s = sugs[+btn.dataset.i];
+          if(btn.dataset.act === 'copy'){
+            copyText(s.prompt, 'Prompt copied');
+          } else {
+            const ta = document.getElementById('convo-input');
+            ta.value = ta.value.replace(/\s+$/,'') + `\nUSER: ${s.prompt}\n`;
+            updateConvoCount();
+            if(convoMemory) localStorage.setItem(CONVO_KEY, ta.value);
+            toast('Appended');
+          }
+        });
+      });
     }
-    // Store token
-    localStorage.setItem('forge_token', data.token);
-    localStorage.setItem('forge_user_email', data.user.email);
-    hideAuthModal();
-    _updateUserChip(data.user.email, data.user.tier);
-    refreshHistoryCount();
-    logLine('info', `auth · signed in as ${data.user.email}`);
-  } catch(e){
-    _setAuthError('Network error — is the server running?');
-    btn.disabled = false;
-    btn.textContent = _authMode === 'login' ? 'Sign in' : 'Create account';
+    const conf = Math.min(98, 70 + sugs.length*8);
+    document.getElementById('m-conf').textContent = conf + '%';
+    document.getElementById('m-conf-d').textContent = '▲ coached';
+    document.querySelector('.result-head .badge').textContent = 'READY';
+    document.querySelector('.result-head .badge').classList.remove('live');
+    logLine('ok', `coach complete · ${sugs.length} suggestions`);
+  } catch(err){
+    logLine('err', 'coach error: ' + err.message);
+    document.querySelector('.result-body').innerHTML =
+      `<div style="color:var(--danger)">⚠ ${escHtml(err.message)}</div>`;
+  } finally {
+    busy = false;
+    document.getElementById('status-ai').textContent = 'AI Online';
   }
 }
-
-function _signOut(){
-  localStorage.removeItem('forge_token');
-  localStorage.removeItem('forge_user_email');
-  sessionStorage.removeItem('forge_token');
-  activeSessionId = null;
-  _updateUserChip(null, null);
-  updateHistoryLabel(0);
-  logLine('info', 'auth · signed out');
-  showAuthModal('login');
-}
-
-function _updateUserChip(email, tier){
-  const chip = document.getElementById('user-chip');
-  if(!chip) return;
-  if(email){
-    const short = email.length > 18 ? email.split('@')[0] : email;
-    chip.innerHTML = `<span class="user-dot"></span><span>${short}</span><span style="color:var(--text3);font-size:10px;margin-left:2px">${tier==='paid'?'★':''}</span>`;
-    chip.title = `Signed in as ${email} · Click to sign out`;
-    chip.onclick = ()=>{
-      if(confirm(`Sign out of ${email}?`)) _signOut();
-    };
-  } else {
-    chip.innerHTML = `<span style="opacity:.5">⌬</span> Sign in`;
-    chip.title = 'Sign in to Forge';
-    chip.onclick = ()=> showAuthModal('login');
-  }
-}
-
-// Keyboard submit on auth inputs
-document.addEventListener('keydown', e=>{
-  if(e.key === 'Enter' && document.getElementById('auth-modal').classList.contains('visible')){
-    _submitAuth();
-  }
-  if(e.key === 'Escape' && document.getElementById('auth-modal').classList.contains('visible')){
-    // Only allow closing if already authed
-    if(getAuthToken()) hideAuthModal();
-  }
-});
-
-// Auth initialised inside the preloader dismiss callback above
-
 </script>
-
-<!-- AUTH MODAL -->
-<div id="auth-modal">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <div class="auth-logo-icon">⌬</div>
-      <div class="auth-logo-text">FORGE</div>
-    </div>
-    <div class="auth-headline" id="auth-headline">Welcome back</div>
-    <div class="auth-sub" id="auth-sub">Sign in to access Forge AI and your session history.</div>
-    <label class="auth-label" for="auth-email-input">Email</label>
-    <input class="auth-input" id="auth-email-input" type="email" placeholder="you@example.com" autocomplete="email" />
-    <label class="auth-label" for="auth-password-input">Password</label>
-    <input class="auth-input" id="auth-password-input" type="password" placeholder="••••••••" autocomplete="current-password" />
-    <button class="auth-submit" id="auth-submit-btn" onclick="_submitAuth()">Sign in</button>
-    <div class="auth-error" id="auth-error-msg"></div>
-    <div class="auth-footer">
-      <span id="auth-toggle-pre">No account?</span>
-      <a href="#" id="auth-toggle-link" onclick="event.preventDefault(); _authMode=_authMode==='login'?'signup':'login'; _renderAuthModal();">Create one free</a>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
